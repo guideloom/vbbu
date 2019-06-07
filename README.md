@@ -82,15 +82,17 @@ restart acpid daemon with
 ```
  
  ## Examples:
- ```bash
- vbbu --syslog --runbackup
-   run a backup on all VMs listed by vboxmanage list vms, log all output to syslog
-   This should be the most common type used. I have this as my nightly cronjob
-   
- vbbu --syslog --runbackup --acpi webserver
-   run a backup on the VM called "webserver" and log output to syslog. Issue an acpipowerbutton instead of savestate
-   
- vbbu --dry-run --runbackup --type ova --list /etc/vm.lst
-   run a dry-run backup on all VMs listed in /etc/vm.lst in ova format
- 
  ```
+ vbbu --syslog --runbackup
+ ```
+ run a backup on all VMs listed by vboxmanage list vms, log all output to syslog. This should be the most common type used. I have this as my nightly cronjob
+ ```
+ vbbu --syslog --runbackup --acpi webserver
+ ```
+ run a backup on the VM called "webserver" and log output to syslog. Issue an acpipowerbutton instead of savestate
+ ```  
+ vbbu --dry-run --runbackup --type ova --list /etc/vm.lst
+ ```
+ run a dry-run backup on all VMs listed in /etc/vm.lst in ova format
+  
+ 
