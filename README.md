@@ -1,12 +1,13 @@
 # vbbu
-Virtualbox BackUp v2.11
+
+## Virtualbox BackUp v2.11
 
 A script to run backups on VMs running under Virtualbox on Linux.
 
 This script will create either clones or OVA export backups on selected VMs. 
 
 Command line options:
-
+```bash
 Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] 
           [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]
           [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER]
@@ -34,6 +35,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
        --help        = this help info
 
        VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list.
+```
 
  Note: Options can also be set in /etc/vbbu.conf or /etc/vbbu.d/VMNAME.conf
    Option evaluation order in highest to lowest priority
@@ -55,26 +57,27 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
        The work around for this is to issue the --acpi option for those Vms only.
        This will issue an acpipowerbutton (power button power off) instead of a savestate.
        IMPORTANT: the acpi daemon MUST be installed for this to work correctly.
-         apt instll acpid
+```bash
+   apt instll acpid
          
-         sample acpi files
-         /etc/acpi/power.sh
-           #!/bin/bash
-           /sbin/shutdown -h now "Power button pressed"
+   sample acpi files
+     /etc/acpi/power.sh
+       #!/bin/bash
+       /sbin/shutdown -h now "Power button pressed"
 
-         /etc/acpi/events/power
-           event=button/power
-           action=/etc/acpi/power.sh "%e"
+     /etc/acpi/events/power
+       event=button/power
+       action=/etc/acpi/power.sh "%e"
          
-         /etc/default/acpid
-           OPTIONS="-l"
-           MODULES="all"
+     /etc/default/acpid
+        OPTIONS="-l"
+        MODULES="all"
          
-         restart acpid daemon with 
-           /etc/init.d/acpid restart
+     restart acpid daemon with 
+       /etc/init.d/acpid restart
+ ```
  
- 
- Examples:
+ ## Examples:
  vbbu --syslog --runbackup
    run a backup on all VMs listed by vboxmanage list vms, log all output to syslog
    This should be the most common type used. I have this as my nightly cronjob
