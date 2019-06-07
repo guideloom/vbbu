@@ -7,7 +7,7 @@ A script to run backups on VMs running under Virtualbox on Linux.
 This script will create either clones or OVA export backups on selected VMs. 
 
 Command line options:
-```bash
+```
 Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] 
           [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]
           [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER]
@@ -35,47 +35,51 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
        --help        = this help info
 
        VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list.
-```
 
  Note: Options can also be set in /etc/vbbu.conf or /etc/vbbu.d/VMNAME.conf
-   Option evaluation order in highest to lowest priority
-          command line option
-          VMNAME machine config (/etc/vbbu.d/VMNAME.conf)
-          global config (/etc/vbbu.conf)
-          defaults (variables set in vbbu.sh file)
+ ```
+
+ Option evaluation order in highest to lowest priority
+ * command line option
+ * VMNAME machine config (/etc/vbbu.d/VMNAME.conf)
+ * global config (/etc/vbbu.conf)
+ * defaults (variables set in vbbu.sh file)
  
  VMs to backup come are set in the following order
-   VMs passed on the command line
-   VM file list specified with the --list option
-   output from : vboxmanage list vms
+ * VMs passed on the command line
+ * VM file list specified with the --list option
+ * output from : vboxmanage list vms
  
  vbbu will attempt to put a running VM into "savestate" before running a backup.
- This saves the machine state and closes all attached data files so a backup can occur.
- After the initial clone is completed, the VM will be restarted into it's previous state before the backup.
+ This saves the machine state and closes all attached data files so a backup can occur. After the initial clone is completed, the VM will be restarted into it's previous state before the backup.
  
- NOTE: SOME VMs (bug in 5.X?) will encounter a kernel panic when the system is restarted. We noticed this with Ubuntu 18.
-       The work around for this is to issue the --acpi option for those Vms only.
-       This will issue an acpipowerbutton (power button power off) instead of a savestate.
-       IMPORTANT: the acpi daemon MUST be installed for this to work correctly.
+ **NOTE**: SOME VMs (bug in 5.X?) may encounter a kernel panic when the system is restarted. We noticed this with Ubuntu 18. The work around for this is to issue the --acpi option for those VMs only. This will issue an acpipowerbutton (power button power off) instead of a savestate.  
+	_**IMPORTANT**: the acpi daemon MUST be installed for this to work correctly._
+	
 ```bash
-   apt instll acpid
-         
-   sample acpi files
-     /etc/acpi/power.sh
-       #!/bin/bash
-       /sbin/shutdown -h now "Power button pressed"
+   # apt install acpid
+```
+#### Sample acpi files
 
-     /etc/acpi/events/power
-       event=button/power
-       action=/etc/acpi/power.sh "%e"
-         
-     /etc/default/acpid
-        OPTIONS="-l"
-        MODULES="all"
-         
-     restart acpid daemon with 
-       /etc/init.d/acpid restart
- ```
+/etc/acpi/power.sh
+```
+  #!/bin/bash
+  /sbin/shutdown -h now "Power button pressed"
+```
+/etc/acpi/events/power
+```
+  event=button/power
+  action=/etc/acpi/power.sh "%e"
+```
+/etc/default/acpid
+```
+  OPTIONS="-l"
+  MODULES="all"
+```
+restart acpid daemon with
+```
+  /etc/init.d/acpid restart
+```
  
  ## Examples:
  ```bash
@@ -90,5 +94,3 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
    run a dry-run backup on all VMs listed in /etc/vm.lst in ova format
  
  ```
- 
- 
