@@ -78,6 +78,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  ```
  
  ## Examples:
+ ```bash
  vbbu --syslog --runbackup
    run a backup on all VMs listed by vboxmanage list vms, log all output to syslog
    This should be the most common type used. I have this as my nightly cronjob
@@ -88,5 +89,6 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  vbbu --dry-run --runbackup --type ova --list /etc/vm.lst
    run a dry-run backup on all VMs listed in /etc/vm.lst in ova format
  
+ ```
  
  
