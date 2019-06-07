@@ -50,6 +50,9 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  * VM file list specified with the --list option
  * output from : vboxmanage list vms
  
+ *note: VMs with spaces " " in their name are not supported at this time. Sorry.*
+ 
+ 
  vbbu will attempt to put a running VM into "savestate" before running a backup.
  This saves the machine state and closes all attached data files so a backup can occur. After the initial clone is completed, the VM will be restarted into it's previous state before the backup.
  
