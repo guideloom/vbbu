@@ -846,5 +846,4 @@ for vm in ${vms}; do
     fi
   fi
 done
-
 exit 0
