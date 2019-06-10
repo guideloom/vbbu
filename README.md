@@ -1,6 +1,6 @@
 # vbbu
 
-## Virtualbox BackUp v2.11
+## Virtualbox BackUp v2.13
 
 A script to run backups on VMs running under Virtualbox on Linux.
 
@@ -14,7 +14,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
           [--acpi] [--noconf] [--nodays] [--versions N] 
           [--runbackup] [--dry-run] [--help|-h] [VMNAME|VMUUID]...
 
- Version : 2.11
+ Version : 2.13
        --verbose     = print lines as they run. Useful for debugging only
        --syslog      = send output to syslog as well as stdout [Default: Off]
        --syslogid    = syslog id string to send to syslog [Default: vbbu]
@@ -67,31 +67,76 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  ##### noconf (CLI: --noconf) [default: 0]
  * do not use config files.
    * /etc/vbbu.conf and confdir files are ignored
- * set to 0 for off, set to 1 for on
- * EX: noconf=0
+ * EX: noconf=0 (0=no, 1=yes)
  
  ##### exportdir (CLI: --exportdir FOLDERPATH) [default: /mnt/lv001-r0/backup/vms]
- * path to "fast" local disk. This is the initial VM export. The disk must have enough space to hold a clone, and possibly an OVA export. Ideally this is local SSD.
+ * path to "fast" local disk. Ideally this is local SSD.
+ * This is the initial VM export. The disk must have enough space to hold a clone, and possibly an OVA export. 
  * in order to minimize downtime on any VM, vbbu will try to restart the VM being backed up as soon as it can.
  * Once restarted, the clone, or OVA export is moved to the slower long term storage, backupdir.
  * exportdir should already exist, and be writeable by the user running the backup script.
  * EX: exportdir=/path/to/local/ssd/vmbackup
  
- ##### backupdir
- ##### versions
- ##### syslog
- ##### syslogid
- ##### vmlistfile
- #####  state
- ##### type
+ ##### backupdir (CLI: --backupdir FOLDERPATH) [default: /mnt/usb1/backup/vms]
+  * path to long term backup disk.
+  * After the initial clone or OVA export, backups are moved here. This disk must be sized to accomodate the current and previous versions of backups. (see "versions" config variable).
+ * backupdir should already exist, and be writeable by the user running the backup script.
+ * EX: backupdir=/path/to/externalnas/vmbackup
+ 
+ ##### versions (CLI: --versions N) [default: 4]
+ * number of previous versions of backups to keep in backupdir
+ * values are rotated out, with the oldest backup being deleted to make room for the new one
+ * EX: versions=4
+ 
+ ##### syslog (CLI: --syslog) [default: 0]
+ * logs are normally just sent to the local stdout. Enabling this option will also send logs to syslog
+ * EX: syslog=0 (0=no, 1=yes)
+ 
+ ##### syslogid (CLI: --syslogid SYSLOGID_STRING) [default: vbbu]
+ * if syslog is enabled, the syslog id to tag all syslog entries with
+ * EX: syslogid=vbbu
+ 
+ ##### list (CLI: --list FILEPATH) [default: not set]
+ * if set, grab the list of VMs to backup from the file.
+ * One VM per line
+ * comments allowed
+  
+ ##### state (CLI: --state STATE) [default: not set]
+ * if set, only backup VMs in the state passed
+ * Current supported states are : running, stopped, paused, saved, poweroff
+ * EX: state=running
+ 
+ ##### type (CLI: --type TYPE) [default: ova]
+ * the backup type to run on a VM
+ * current supported types are : ova, clone
+ * clone backups MUST be done for all backups as a first step. One the clone is compelted, the VM is restarted.
+ * clone backups are a simple clone of the VM. These run the fastest, but take the most disk.
+ * ova backups are an OVA export of the clone created above. These take longer, but can take 50% less disk. These are also much easier to import into virtualbox (or other VM techs)
+ * EX: type=ova
+  
+ ##### days [default: not set]
+ * Simple scheduling. Run backups for the VMs on the days listed. Not set = all days.
+ * day name (Mon, Tue, ..) whatever `date +%a` returns, or day of month number (01..31), or combination
+ * if the word "never" is set, the VM is never backed up
+ * EX: days=Mon,Wed,01,15
+ 
+ ##### nodays (CLI: --nodays) [default: 0]
+ * if set, ignore any "days" setting in the config files
+ * EX: nodays=0 (0=no, 1=yes)
+ 
+ ##### acpi (CLI: --acpi) [default: 0]
+ * if set, issue an "acpipowerbutton" to shutdown the VM instead of a "savestate"
+ * **NOTE**: SOME VMs (bug in 5.X?) may encounter a kernel panic when the system is restarted if you used "savestate" to shutdown the VM. We noticed this with Ubuntu 18. The work around is to issue an acpipowerbutton option for those VMs only.	_**IMPORTANT**: the acpi daemon MUST be installed on the VM guest for this to work correctly. (See below)_
+ 
+ ##### runbackup (CLI: --runbackup) [default: 0]
+ * safety switch
+ * the script will only run if runbackup is set to 1. Otherwise this will exit immediatly
+ * prevents "accidental" script runs, thus causing a VM to shutdown
+ * EX: runbackup=0 (0=no, 1=yes)
+ 
  ##### dryrun
- ##### runbackup
- ##### days
- ##### nodays
- ##### acpi
 
-  > **NOTE**: SOME VMs (bug in 5.X?) may encounter a kernel panic when the system is restarted. We noticed this with Ubuntu 18. The work around for this is to issue the --acpi option for those VMs only. This will issue an acpipowerbutton (power button power off) instead of a savestate.  
-	_**IMPORTANT**: the acpi daemon MUST be installed for this to work correctly._
+ #### ACPI daemon install
 	
 ```bash
    # apt install acpid
