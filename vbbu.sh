@@ -3,7 +3,7 @@
 # vbbu - Virtualbox Backup
 
 # version number of script
-version=2.11
+version=2.13
 
 # option eval order
 #    commandline > machine config > global config > defaults
@@ -49,7 +49,7 @@ syslogid=vbbu
 email=root
 
 # filename of VMs to backup
-vmlistfile=""
+list=""
 
 # backup only VMs in this state.
 clistate=""
@@ -128,9 +128,9 @@ acpi=0
 
 # =======================================================
 usage () {
-  echo "Usage: $0 [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dry-run] [--help|-h]"
+  echo "Usage: $0 [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [--help|-h]"
   echo "          [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]"
-  echo "          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER]"
+  echo "          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER] [--confdir PATH_TO_CONF_FILES"
   echo "          [--acpi] [--noconf] [--nodays] [--runbackup]"
   echo "          [--versions N] [VMNAME|VMUUID]..."
   echo ""
@@ -151,7 +151,7 @@ usage () {
   echo "                         Once export is completed, and systems are running again, backup files are moved here."
   echo "       --versions    = number of versions to keep in BACKUPDIR. [Default: ${versions}]"
   echo "       --acpi        = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart."
-  echo "       --dry-run     = Limited run. Display commands, and do not run them. [Default: off]"
+  echo "       --dryrun     = Limited run. Display commands, and do not run them. [Default: off]"
   echo "       --help        = this help info"
   echo "       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and "pausing" VMs"
   echo ""
@@ -315,8 +315,8 @@ loadconfdefaults() {
   if [[ "${value}" != "" ]]; then email="${value}"; fi
 
   # look for VM list file
-  value=$(getconfopt "${masterconffile}" "vmlistfile")
-  if [[ "${value}" != "" ]]; then vmlistfile="${value}"; fi
+  value=$(getconfopt "${masterconffile}" "list")
+  if [[ "${value}" != "" ]]; then list="${value}"; fi
 
   # look for state
   value=$(getconfopt "${masterconffile}" "state")
@@ -355,7 +355,7 @@ while [ "$1" != "" ]; do
   case $1 in
     --state ) shift; clistate=$1
                 ;;
-    --list ) shift; vmlistfile=$1
+    --list ) shift; list=$1
                ;;
     --vm ) shift; vm="${vm} $1"
            ;;
@@ -381,7 +381,9 @@ while [ "$1" != "" ]; do
              ;;
     --syslogid ) shift; syslogid=$1
                  ;;
-    --dry-run ) dryrun=1
+    --confdir ) shift; confdir=$1
+                 ;;
+    --dryrun ) dryrun=1
                    ;;
     -h | --help ) usage
                   exit
@@ -487,13 +489,13 @@ if [[ "${vm}" != "" ]]; then
   vms="${vm}"
 else
   # get list of VMs from file
-  if [[ "${vmlistfile}" != "" ]]; then
+  if [[ "${list}" != "" ]]; then
     # if list of VMs exists use that
-    if [[ -f "${vmlistfile}" ]]; then
+    if [[ -f "${list}" ]]; then
       # grab the candidate list from the file
-      vms=$(cat "${vmlistfile}" | ${sedsbc} | awk '{print $1}')
+      vms=$(cat "${list}" | ${sedsbc} | awk '{print $1}')
     else
-      log "VM list [${vmlistfile}] is not a file. Exiting."
+      log "VM list [${list}] is not a file. Exiting."
       exit 1
     fi
   else
@@ -846,4 +848,5 @@ for vm in ${vms}; do
     fi
   fi
 done
+
 exit 0
