@@ -12,7 +12,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
           [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]
           [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER]
           [--acpi] [--noconf] [--nodays] [--versions N] 
-          [--runbackup] [--dry-run] [--help|-h] [VMNAME|VMUUID]...
+          [--runbackup] [--dryrun] [--help|-h] [VMNAME|VMUUID]...
 
  Version : 2.13
        --verbose     = print lines as they run. Useful for debugging only
@@ -31,7 +31,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
        --versions    = number of versions to keep in BACKUPDIR. [Default: 4]
        --acpi        = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart.
        --runbackup   = Actually run. Safety switch. Prevents accidently running backups and "pausing" VMs
-       --dry-run     = Limited run. Display commands, and do not run them. [Default: off]
+       --dryrun      = Limited run. Display commands, and do not run them. [Default: off]
        --help        = this help info
 
        VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list.
@@ -134,7 +134,9 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  * prevents "accidental" script runs, thus causing a VM to shutdown
  * EX: runbackup=0 (0=no, 1=yes)
  
- ##### dryrun
+ ##### dryrun (CLI: --dryrun) [default: 0]
+ * if set, do a dry run. Do not execute commands, just show them.
+ * EX: dryrun=0  (0=no, 1=yes)
 
  #### ACPI daemon install
 	
