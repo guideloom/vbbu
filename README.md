@@ -4,7 +4,7 @@
 
 A script to run backups on VMs running under Virtualbox on Linux.
 
-This script will create either clones or OVA export backups on selected VMs. 
+This script will create either clones or OVA export backups on selected VMs.  This should be run using the same user that runs the virtualbox VMs.
 
 Command line options:
 ```
@@ -38,6 +38,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
 
  Note: Options can also be set in /etc/vbbu.conf or /etc/vbbu.d/VMNAME.conf
  ```
+
  Option evaluation order in highest to lowest priority
  * command line option
  * VMNAME machine config (/etc/vbbu.d/VMNAME.conf)
@@ -51,40 +52,45 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  
  *note: VMs with spaces " " in their name are not supported at this time. Sorry.*
   
- vbbu will attempt to put a running VM into "savestate" before running a backup.
- This saves the machine state and closes all attached data files so a backup can occur. After the initial clone is completed, the VM will be restarted into it's previous state before the backup.
+ vbbu will attempt to put a running VM into "savestate" before running a backup. This saves the machine state and closes all attached data files so a backup can occur. After the initial clone is completed, the VM will be restarted into it's previous state before the backup.
  
  ### Config Variables
  These variables are set either by default (in the shell script itself), the master config file (/etc/vbbu.conf), the individual VM config file (under /etc/vbbu.d) or on the command line.
  
  _Config variable names are always converted to lower case._
  
- confdir (CLI: -confdir FOLDERPATH) [default: /etc/vbbu.d]
+ ##### confdir (CLI: --confdir FOLDERPATH) [default: /etc/vbbu.d]
  * path to the individual VM config files; naming VMNAME.conf
-     EX: confdir=/etc/vbbu.d
+   * conffile for VM called "webserver" would be /etc/vbbu.d/webserver.conf
+ * EX: confdir=/etc/vbbu.d
   
- noconf (CLI: --noconf) [default: 0]
- * do not use config files. /etc/vbbu.conf and confdir files are ignored
+ ##### noconf (CLI: --noconf) [default: 0]
+ * do not use config files.
+   * /etc/vbbu.conf and confdir files are ignored
  * set to 0 for off, set to 1 for on
-     EX: noconf=0
-	 
- exportdir
- backupdir
- versions
- syslog
- syslogid
- vmlistfile
- state
- type
- dryrun
- runbackup
- days
- nodays
- acpi
+ * EX: noconf=0
  
+ ##### exportdir (CLI: --exportdir FOLDERPATH) [default: /mnt/lv001-r0/backup/vms]
+ * path to "fast" local disk. This is the initial VM export. The disk must have enough space to hold a clone, and possibly an OVA export. Ideally this is local SSD.
+ * in order to minimize downtime on any VM, vbbu will try to restart the VM being backed up as soon as it can.
+ * Once restarted, the clone, or OVA export is moved to the slower long term storage, backupdir.
+ * exportdir should already exist, and be writeable by the user running the backup script.
+ * EX: exportdir=/path/to/local/ssd/vmbackup
  
- 
- **NOTE**: SOME VMs (bug in 5.X?) may encounter a kernel panic when the system is restarted. We noticed this with Ubuntu 18. The work around for this is to issue the --acpi option for those VMs only. This will issue an acpipowerbutton (power button power off) instead of a savestate.  
+ ##### backupdir
+ ##### versions
+ ##### syslog
+ ##### syslogid
+ ##### vmlistfile
+ #####  state
+ ##### type
+ ##### dryrun
+ ##### runbackup
+ ##### days
+ ##### nodays
+ ##### acpi
+
+  > **NOTE**: SOME VMs (bug in 5.X?) may encounter a kernel panic when the system is restarted. We noticed this with Ubuntu 18. The work around for this is to issue the --acpi option for those VMs only. This will issue an acpipowerbutton (power button power off) instead of a savestate.  
 	_**IMPORTANT**: the acpi daemon MUST be installed for this to work correctly._
 	
 ```bash
