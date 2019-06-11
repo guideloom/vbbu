@@ -1,9 +1,24 @@
 #!/bin/bash
 
-# vbbu - Virtualbox Backup
+#   # vbbu - Virtualbox Backup
+#   Copyright (C) 2019  GuideLoom Inc./Trevor Paquette
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 # version number of script
-version=2.13
+version=2.15
 
 # option eval order
 #    commandline > machine config > global config > defaults
@@ -46,6 +61,7 @@ syslog=0
 syslogid=vbbu
 
 # where to send email to
+# future placeholder
 email=root
 
 # filename of VMs to backup
@@ -225,7 +241,7 @@ secstohms() {
 # =======================================================
 # is arguement passed a number
 isnum() {
- awk -v a="$1" 'BEGIN {print (a == a + 0)}';
+ gawk -v a="$1" 'BEGIN {print (a == a + 0)}';
 }
 
 # =======================================================
@@ -388,6 +404,10 @@ while [ "$1" != "" ]; do
     -h | --help ) usage
                   exit
                   ;;
+    -* ) echo "Unknown option \"$1\""
+         usage
+         exit
+         ;;
     * ) vm="${vm} $1"
         ;;
 
@@ -395,14 +415,23 @@ while [ "$1" != "" ]; do
   shift
 done
 
-# sanity checks
-# make sure vboxmanage is in our path
-command -v vboxmanage >& /dev/null
-status=$?
-if [[ ${status} -ne 0 ]]; then
-  log "Error: vboxmanage command not found. Check your executable path or not installed. Exiting."
+# check master safety switch first. Must be set to 1 to continue
+if [[ "${runbackup}" == "0" ]]; then
+  echo "Runbackup not set. Safety switch executing. Exiting."
   exit 1
 fi
+
+# sanity checks
+# make sure the commands we need to run are available
+commlist="vboxmanage df logger cat gawk grep"
+for comm in ${commlist}; do
+  command -v ${comm} >& /dev/null
+  status=$?
+  if [[ ${status} -ne 0 ]]; then
+    log "Error: ${comm} command not found. Check your executable path or not installed. Exiting."
+    exit 1
+  fi
+done
 
 # check arguments to make sure they make sense
 # check clistate
@@ -503,13 +532,6 @@ else
       vms=$(vboxmanage list vms | rev | cut -d' ' -f1 | rev)
     fi
   fi
-fi
-
-# check master safety siwthc first. Must be set to 1 to continue
-#check versions
-if [[ "${runbackup}" == "0" ]]; then
-  echo "Runbackup not set. Safety switch executing. Exiting."
-  exit 1
 fi
 
 # loop through the list of VMs to backup
@@ -671,8 +693,8 @@ for vm in ${vms}; do
         # Step 1 create VM clone. MUCH faster then exporting to OVA.
         # Reasoning: Minimize system downtime. Convert to OVA, if needed, AFTER cloning is completed
 
-        freedisk=$(df -H "${exportdir}"/. | grep /dev | awk '{print $4}')
-        log "    Disk free for ${exportdir} : ${freedisk}"
+        freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
+        log "    Disk free before clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
         backupname="${vmname}-${timestamp}${backuptag}"
         log "    Begin Clone : [${backupname}]"
@@ -689,8 +711,8 @@ for vm in ${vms}; do
         duration=$(secstohms $SECONDS)
         # only log output if error
         if [[ ${backupstatus} -ne 0 ]]; then logfile "${tmplog}" ; fi
-        freedisk=$(df -H "${exportdir}"/. | grep /dev | awk '{print $4}')
-        log "    Disk free for ${exportdir} : ${freedisk}"
+        freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
+        log "    Disk free after clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
         log "    End Clone export. $duration"
 
         # put vm back into original state, regardless of backupstatus
@@ -745,8 +767,8 @@ for vm in ${vms}; do
           if [[ ${registerstatus} -ne 0 ]]; then logfile "${tmplog}" ; fi
           log "    End VM register for OVA export. $duration"
             
-          freedisk=$(df -H "${exportdir}"/. | grep /dev | awk '{print $4}')
-          log "    Disk free for ${exportdir} : ${freedisk}"
+          freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
+          log "    Disk free before OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
           ovaname="${vmname}-${timestamp}.ova"
           log "    Begin OVA export: [${ovaname}]"
@@ -762,8 +784,8 @@ for vm in ${vms}; do
           # only log output if error
           if [[ ${backupstatus} -ne 0 ]]; then logfile "${tmplog}" ; fi
 
-          freedisk=$(df -H "${exportdir}"/. | grep /dev | awk '{print $4}')
-          log "    Disk free for ${exportdir} : ${freedisk}"
+          freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
+          log "    Disk free after OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
           log "    End OVA export. $duration"
 
@@ -807,8 +829,8 @@ for vm in ${vms}; do
           # Make latest backup folder
           run mkdir -p "${backupfolder}"
 
-          freedisk=$(df -H "${backupfolder}"/. | grep /dev | awk '{print $4}')
-          log "    Disk free for ${backupfolder} : ${freedisk}"
+          freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
+          log "    Disk free before move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
 
           # move export file to backup folder
           log "    Begin VM move from export to backup : [${vmname}]"
@@ -823,8 +845,8 @@ for vm in ${vms}; do
             run /bin/rm -rf "${exportdir}/${backupname}"
           fi
           duration=$(secstohms $SECONDS)
-          freedisk=$(df -H "${backupfolder}"/. | grep /dev | awk '{print $4}')
-          log "    Disk free for ${backupfolder} : ${freedisk}"
+          freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
+          log "    Disk free after move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
 
           log "    End VM move.  $duration"
 
