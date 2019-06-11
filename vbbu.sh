@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#   # vbbu - Virtualbox Backup
+#   vbbu - Virtualbox Backup
+#
 #   Copyright (C) 2019  GuideLoom Inc./Trevor Paquette
 #
 #   This program is free software: you can redistribute it and/or modify
