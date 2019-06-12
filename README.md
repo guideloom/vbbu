@@ -14,20 +14,17 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
           [--acpi] [--noconf] [--nodays] [--versions N] 
           [--runbackup] [--dryrun] [--help|-h] [VMNAME|VMUUID]...
 
- Version : 2.15
+ Version : 2.16
        --verbose     = print lines as they run. Useful for debugging only
        --syslog      = send output to syslog as well as stdout [Default: Off]
        --syslogid    = syslog id string to send to syslog [Default: vbbu]
        --list        = full path to list of VMs to backup
-                          ONE VM per line. Comments (lines starting with #) allowed.
        --noconf      = do not use config files. Global conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored
        --nodays      = ignore days option in all conf files. Translation: run every day. [Default: off]
        --state       = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]
        --type        = type of backup to create. One of ova|clone. [Default: ova]
        --exportdir   = path to temporary export directory, [Default: /mnt/lv001-r0/backup/vms]
-                         Initial export location and for systems that require minimal downtime, make this local SSD for speed
        --backupdir   = path to final backup directory. [Default: /mnt/usb1/backup/vms]
-                         Once export is completed, and systems are running again, backup files are moved here
        --versions    = number of versions to keep in BACKUPDIR. [Default: 4]
        --acpi        = issue acpipowerbutton shutdown instead of savestate
        --runbackup   = Actually run. Safety switch. Prevents accidently running backups and "pausing" VMs
