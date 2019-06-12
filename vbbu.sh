@@ -19,7 +19,7 @@
 #
 
 # version number of script
-version=2.15
+version=2.16
 
 # option eval order
 #    commandline > machine config > global config > defaults
@@ -155,22 +155,18 @@ usage () {
   echo "       --verbose     = print lines as they run. Useful for debugging only"
   echo "       --syslog      = send output to syslog as well as stdout [Default: Off]"
   echo "       --syslogid    = syslog id string to send to syslog [Default: ${syslogid}]"
-  echo "       --list        = full path to list of VMs to backup."
-  echo "                          ONE VM per line. Comments (lines starting with #) allowed. Format is:"
-  echo "                              vmname"
-  echo "       --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored."
+  echo "       --list        = full path to list of VMs to backup"
+  echo "       --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored"
   echo "       --nodays      = ignore days option in all conf files. Translation: run every day. [Default: off]"
   echo "       --state       = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]"
   echo "       --type        = type of backup to create. One of ova|clone. [Default: ${backuptype}]" 
   echo "       --exportdir   = path to temporary export directory, [Default: ${exportdir}]"
-  echo "                         Initial export location and for systems that require minimal downtime, make this local SSD for speed"
   echo "       --backupdir   = path to final backup directory. [Default: ${backupdir}]"
-  echo "                         Once export is completed, and systems are running again, backup files are moved here."
   echo "       --versions    = number of versions to keep in BACKUPDIR. [Default: ${versions}]"
   echo "       --acpi        = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart."
-  echo "       --dryrun     = Limited run. Display commands, and do not run them. [Default: off]"
+  echo "       --dryrun      = Limited run. Display commands, and do not run them. [Default: off]"
   echo "       --help        = this help info"
-  echo "       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and "pausing" VMs"
+  echo "       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and pausing VMs"
   echo ""
   echo "       VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list."
   echo ""
@@ -361,9 +357,6 @@ loadconfdefaults() {
 # --------------------------------------------------------------------------------
 # main start
 
-# display command line used to run
-log "$0 ($version) command line : $0 $*"
-
 # get configuration overrides from master conf file
 loadconfdefaults
 
@@ -415,6 +408,9 @@ while [ "$1" != "" ]; do
   esac
   shift
 done
+
+# display command line used to run
+log "$0 ($version) command line : $0 $*"
 
 # check master safety switch first. Must be set to 1 to continue
 if [[ "${runbackup}" == "0" ]]; then
@@ -614,7 +610,7 @@ for vm in ${vms}; do
       confacpi=$(getconfopt "${confdir}/${vmname}.conf" "acpi")
 
       if [[ "${confacpi}" -eq 1 ]]; then
-        log "   ["${vmname}"] config file acpi override : ${confacpi}"
+        # log "   ["${vmname}"] config file acpi override : ${confacpi}"
         shutcomm="acpipowerbutton"
       fi
     fi
