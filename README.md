@@ -4,6 +4,9 @@
 
 A script to run backups on VMs running under Virtualbox on Linux.
 
+> Disclaimer : Use of this software is at your own risk. Translation, Don't blame us if you lose data.
+> If used correctly, this is a great backup system :)
+
 This script will create either clones or OVA export backups on selected VMs.  This should be run using the same user that runs the virtualbox VMs.
 
 Command line options:
