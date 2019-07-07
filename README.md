@@ -4,39 +4,38 @@
 
 A script to run backups on VMs running under Virtualbox on Linux.
 
-> Disclaimer : Use of this software is at your own risk. Translation, Don't blame us if you lose data.
-> If used correctly, this is a great backup system :)
-
 This script will create either clones or OVA export backups on selected VMs.  This should be run using the same user that runs the virtualbox VMs.
 
 Command line options:
 ```
-Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] 
+Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [--help|-h]
           [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]
-          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER]
-          [--acpi] [--noconf] [--nodays] [--versions N] 
-          [--runbackup] [--dryrun] [--help|-h] [VMNAME|VMUUID]...
+          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER] [--confdir PATH_TO_CONF_FILES
+          [--acpi] [--noconf] [--nodays] [--runbackup]
+          [--versions N] [--daystokeep N] [VMNAME|VMUUID]...
 
- Version : 2.16
+ Version : 2.17
        --verbose     = print lines as they run. Useful for debugging only
        --syslog      = send output to syslog as well as stdout [Default: Off]
-       --syslogid    = syslog id string to send to syslog [Default: vbbu]
+       --syslogid    = syslog id string to send to syslog [Default: ]
        --list        = full path to list of VMs to backup
-       --noconf      = do not use config files. Global conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored
-       --nodays      = ignore days option in all conf files. Translation: run every day. [Default: off]
+       --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored
+       --nodays      = ignore days option in conf files. Translation: run every day. [Default: off]
        --state       = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]
        --type        = type of backup to create. One of ova|clone. [Default: ova]
        --exportdir   = path to temporary export directory, [Default: /mnt/lv001-r0/backup/vms]
        --backupdir   = path to final backup directory. [Default: /mnt/usb1/backup/vms]
-       --versions    = number of versions to keep in BACKUPDIR. [Default: 4]
-       --acpi        = issue acpipowerbutton shutdown instead of savestate
-       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and "pausing" VMs
+       --versions    = number of versions to keep in BACKUPDIR. [Default: 2]
+       --daystokeep  = number of days to keep backups for. Ones older are removed. [Default: 0]
+                       Note: if daystokeep is set, this OVERRIDES the --versions option.
+       --acpi        = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart.
        --dryrun      = Limited run. Display commands, and do not run them. [Default: off]
        --help        = this help info
+       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and pausing VMs
 
        VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list.
 
- Note: Options can also be set in /etc/vbbu.conf or /etc/vbbu.d/VMNAME.conf
+  Note: Options can also be set in /etc/vbbu.conf or /etc/vbbu.d/VMNAME.conf
  ```
 
  Option evaluation order in highest to lowest priority
@@ -87,6 +86,12 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING]
  * number of previous versions of backups to keep in backupdir
  * values are rotated out, with the oldest backup being deleted to make room for the new one
  * EX: versions=4
+ 
+  ##### daystokeep (CLI: --daystokeep N) [default: 0]
+ * number of days to keep previous backups in backupdir
+ * backups older than this number of days are removed
+ * _If set, this option **overrides** --versions_
+ * EX: daystokeep=14
  
  ##### syslog (CLI: --syslog) [default: 0]
  * logs are normally just sent to the local stdout. Enabling this option will also send logs to syslog
