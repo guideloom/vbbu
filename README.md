@@ -84,13 +84,17 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [-
  
  ##### versions (CLI: --versions N) [default: 4]
  * number of previous versions of backups to keep in backupdir
- * values are rotated out, with the oldest backup being deleted to make room for the new one
+ * values are rotated out, with the oldest backup being deleted to make room for the new one, in syslog fashion
+ * example names: vmname, vmname.1, vmname.2, vmname.3
  * EX: versions=4
+ 
  
   ##### daystokeep (CLI: --daystokeep N) [default: 0]
  * number of days to keep previous backups in backupdir
  * backups older than this number of days are removed
  * _If set, this option **overrides** --versions_
+ * names of backup folders are also changed to reflect _timestamps_ and not versions.
+ * example names: vmname.20190605-031256, vmname.20190606-030832, vnmame.20190628-134503
  * EX: daystokeep=14
  
  ##### syslog (CLI: --syslog) [default: 0]
