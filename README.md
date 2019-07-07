@@ -301,3 +301,18 @@ Jun 12 02:21:45 devops01 vbbu: -- [dedi02] cannot backup. VM day mismatch. [VM d
 Jun 12 02:21:45 devops01 vbbu: -- [dedi03] cannot backup. VM day mismatch. [VM days:Thu] [Today:Tue or 11]
 Jun 12 02:21:45 devops01 vbbu: -- [ddvl001] cannot backup. VM day mismatch. [VM days:Thu] [Today:Tue or 11]
 ```
+---
+   Copyright (C) 2019  GuideLoom Inc./Trevor Paquette
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.
