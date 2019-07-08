@@ -34,7 +34,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.17
+version=2.18
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -701,7 +701,7 @@ for vm in ${vms}; do
       timestamp=$(date +${timeformat})
        
       # We have a match.. begin backup
-      gl_log "-- [${vmname}] Start backup [State:${state}] [Days:${days}] [Type:${backuptype}] [Shutdown:${shutcomm}]"
+      gl_log "-- [${vmname}] Start backup [State:${foundstate}] [Days:${days}] [Type:${backuptype}] [Shutdown:${shutcomm}]"
 
       # Delete old TMPLOG, jic
       gl_run /bin/rm -f "${tmplog}"
@@ -965,7 +965,7 @@ for vm in ${vms}; do
       vmendsec=$(date +%s)
       duration=$(gl_secstohms $(( vmendsec - vmstartsec )))
 
-      gl_log "-- [${vmname}] End backup [${state}] $duration"
+      gl_log "-- [${vmname}] End backup [${foundstate}] $duration"
     else
       gl_log "${nobackupreason}"
     fi
