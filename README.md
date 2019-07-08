@@ -14,7 +14,7 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [-
           [--acpi] [--noconf] [--nodays] [--runbackup]
           [--versions N] [--daystokeep N] [VMNAME|VMUUID]...
 
- Version : 2.17
+ Version : 2.18
        --verbose     = print lines as they run. Useful for debugging only
        --syslog      = send output to syslog as well as stdout [Default: Off]
        --syslogid    = syslog id string to send to syslog [Default: ]
