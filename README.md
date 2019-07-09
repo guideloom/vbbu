@@ -4,6 +4,8 @@
 
 A script to run backups on VMs running under Virtualbox on Linux.
 
+_* Important: requires https://github.com/guideloom/gl_functions.sh to be installed *_
+
 This script will create either clones or OVA export backups on selected VMs.  This should be run using the same user that runs the virtualbox VMs.
 
 Command line options:
