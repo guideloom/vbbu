@@ -26,6 +26,7 @@ glfunc_path=/home/vbox/bin/gl_functions.sh
 if [[ ! -f ${glfunc_path} ]]; then
   echo "Error: Cannot find GL functions script."
   echo "       Check path ${glfunc_path}."
+  echo "       Additional info in gl_functions.sh project @ https://github.com/guideloom"
   echo "       Exiting."
   exit 1
 fi
@@ -34,7 +35,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.18
+version=2.20
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -100,7 +101,7 @@ vm_syslog=
 cli_syslog=
 syslog=
 
-# syslog identifier
+# syslog identifier, default vbbu
 dflt_syslogid="vbbu"
 glob_syslogid=
 vm_syslogid=
@@ -176,20 +177,6 @@ vm_dryrun=
 cli_dryrun=
 dryrun=
 
-# syslog setting.. default is off
-dflt_syslog=0
-glob_syslog=
-vm_syslog=
-cli_syslog=
-syslog=
-
-# syslogid setting.. default is blank
-dflt_syslogid=""
-glob_syslogid=
-vm_syslogid=
-cli_syslogid=
-syslogid=
-
 # noconf setting.. default is off
 dflt_noconf=""
 glob_noconf=
@@ -262,7 +249,7 @@ usage () {
   echo ""
   echo " Version : ${version}"
   echo "       --verbose     = print lines as they run. Useful for debugging only"
-  echo "       --syslog      = send output to syslog as well as stdout [Default: Off]"
+  echo "       --syslog      = send output to syslog as well as stdout [Default: ${dflt_syslog}]"
   echo "       --syslogid    = syslog id string to send to syslog [Default: ${dflt_syslogid}]"
   echo "       --list        = full path to list of VMs to backup"
   echo "       --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored"
@@ -455,8 +442,8 @@ gl_log "$0 ($version) command line : $0 ${args}"
 # set initial runbackup var
 runbackup=$(gl_getvar "string" "${dflt_runbackup}" 0 "${glob_runbackup}" 0 "${vm_runbackup}" 0 "${cli_runbackup}" 0)
 # check master safety switch first. Must be set to 1 to continue
-if [[ "${runbackup}" == "no" ]]; then
-  echo "Runbackup not set. Safety switch kicking in. Exiting."
+if [[ "${runbackup}" != "yes" ]]; then
+  echo "Runbackup not set to yes. Safety switch kicking in. Exiting."
   exit 1
 fi
 
@@ -965,7 +952,7 @@ for vm in ${vms}; do
       vmendsec=$(date +%s)
       duration=$(gl_secstohms $(( vmendsec - vmstartsec )))
 
-      gl_log "-- [${vmname}] End backup [${foundstate}] $duration"
+      gl_log "-- [${vmname}] End backup [State:${foundstate}] $duration"
     else
       gl_log "${nobackupreason}"
     fi
