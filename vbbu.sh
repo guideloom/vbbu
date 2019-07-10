@@ -35,7 +35,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.20
+version=2.21
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -203,10 +203,10 @@ noconf=
 #
 # restart acpid daemon : /etc/init.d/acpid restart
 dflt_acpi=0
-glob_acpi=0
-vm_acpi=0
-cli_acpi=0
-acpi=0
+glob_acpi=
+vm_acpi=
+cli_acpi=
+acpi=
 
 # list of VMs to backup
 # just here to initialize the variables
@@ -656,7 +656,8 @@ for vm in ${vms}; do
 
     vm_acpi=$(gl_getconfopt "${vm_conf_file}" "acpi")
     acpi=$(gl_getvar "number" "${dflt_acpi}" 0 "${glob_acpi}" 0 "${vm_acpi}" 0 "${cli_acpi}" 0)
-
+    #    echo ${vmname} acpi: D:${dflt_acpi},G:${glob_acpi},V:${vm_acpi},C:${cli_acpi},R:${acpi}
+    
     # check for acpi override
     if [[ "${acpi}" -eq 1 ]]; then
       shutcomm="acpipowerbutton"
