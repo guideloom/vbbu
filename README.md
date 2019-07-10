@@ -16,10 +16,10 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [-
           [--acpi] [--noconf] [--nodays] [--runbackup]
           [--versions N] [--daystokeep N] [VMNAME|VMUUID]...
 
- Version : 2.18
+ Version : 2.20
        --verbose     = print lines as they run. Useful for debugging only
-       --syslog      = send output to syslog as well as stdout [Default: Off]
-       --syslogid    = syslog id string to send to syslog [Default: ]
+       --syslog      = send output to syslog as well as stdout [Default: 0]
+       --syslogid    = syslog id string to send to syslog [Default: vbbu]
        --list        = full path to list of VMs to backup
        --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored
        --nodays      = ignore days option in conf files. Translation: run every day. [Default: off]
