@@ -35,7 +35,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.21
+version=2.22
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -274,81 +274,86 @@ usage () {
 
 # --------------------------------------------------------------------------------
 loadconfdefaults() {
+  local file
   local value
     
-  # load config defaults that may override the builtin defaults above
-  # set global variables accordingly
-
-  # global no config is set.. don't load anything
+  # if global no config is set.. don't load anything
   if [[ "${gl_noconf}" -eq 1 ]]; then
     return 1
   fi
 
-  # if masterconf file not found.. don't load anything
-  if [[ ! -f "${masterconffile}" ]]; then
-    return 1
+  # load config defaults that may override the builtin defaults above
+  # set global variables accordingly
+
+  file="$1"
+
+  # if conf file not found.. don't load anything
+  if [[ "${file}" != "" ]]; then
+    if [[ ! -f "${file}" ]]; then
+      return 1
+    fi
   fi
 
   # start loading up values
   
   # look for conf dir
-  value=$(gl_getconfopt "${masterconffile}" "confdir")
+  value=$(gl_getconfopt "${file}" "confdir")
   if [[ "${value}" != "" ]]; then confdir="${value}"; fi
 
   # look for VM list file
-  value=$(gl_getconfopt "${masterconffile}" "list")
+  value=$(gl_getconfopt "${file}" "list")
   if [[ "${value}" != "" ]]; then list="${value}"; fi
 
   # look for exportdir
-  value=$(gl_getconfopt "${masterconffile}" "exportdir")
+  value=$(gl_getconfopt "${file}" "exportdir")
   if [[ "${value}" != "" ]]; then glob_exportdir="${value}"; fi
 
   # look for backupdir
-  value=$(gl_getconfopt "${masterconffile}" "backupdir")
+  value=$(gl_getconfopt "${file}" "backupdir")
   if [[ "${value}" != "" ]]; then glob_backupdir="${value}"; fi
 
   # look for versions
-  value=$(gl_getconfopt "${masterconffile}" "versions")
+  value=$(gl_getconfopt "${file}" "versions")
   if [[ "${value}" != "" ]]; then glob_versions="${value}"; fi
 
   # look for syslog
-  value=$(gl_getconfopt "${masterconffile}" "syslog")
+  value=$(gl_getconfopt "${file}" "syslog")
   if [[ "${value}" != "" ]]; then glob_syslog="${value}"; fi
 
   # look for syslog identifier
-  value=$(gl_getconfopt "${masterconffile}" "syslogid")
+  value=$(gl_getconfopt "${file}" "syslogid")
   if [[ "${value}" != "" ]]; then glob_syslogid="${value}"; fi
 
   # look for daystokeep
-  value=$(gl_getconfopt "${masterconffile}" "daystokeep")
+  value=$(gl_getconfopt "${file}" "daystokeep")
   if [[ "${value}" != "" ]]; then glob_daystokeep="${value}"; fi
 
   # look for email to send to
-  value=$(gl_getconfopt "${masterconffile}" "email")
+  value=$(gl_getconfopt "${file}" "email")
   if [[ "${value}" != "" ]]; then glob_email="${value}"; fi
 
   # look for state
-  value=$(gl_getconfopt "${masterconffile}" "state")
+  value=$(gl_getconfopt "${file}" "state")
   if [[ "${value}" != "" ]]; then glob_state="${value}"; fi
 
   # look for backup type
-  value=$(gl_getconfopt "${masterconffile}" "backuptype")
+  value=$(gl_getconfopt "${file}" "backuptype")
   if [[ "${value}" != "" ]]; then glob_backuptype="${value}"; fi
 
   # look for dryrun
-  value=$(gl_getconfopt "${masterconffile}" "dryrun")
+  value=$(gl_getconfopt "${file}" "dryrun")
   if [[ "${value}" != "" ]]; then glob_dryrun="${value}"; fi
 
   # look for runbackup
-  value=$(gl_getconfopt "${masterconffile}" "runbackup")
+  value=$(gl_getconfopt "${file}" "runbackup")
   if [[ "${value}" != "" ]]; then glob_runbackup="${value}"; fi
 
   # look for acpi
-  value=$(gl_getconfopt "${masterconffile}" "acpi")
+  value=$(gl_getconfopt "${file}" "acpi")
   if [[ "${value}" != "" ]]; then glob_acpi="${value}"; fi
 
   # look for nodays
-  value=$(gl_getconfopt "${masterconffile}" "nodays")
+  value=$(gl_getconfopt "${file}" "nodays")
   if [[ "${value}" != "" ]]; then glob_nodays="${value}"; fi
 
   return 0
@@ -359,7 +364,7 @@ loadconfdefaults() {
 # main start
 
 # get configuration overrides from master conf file
-loadconfdefaults
+loadconfdefaults "${masterconffile}"
 
 # set args to arguements before running shift parsing
 args="$*"
