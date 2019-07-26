@@ -35,7 +35,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.22
+version=2.26
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -366,8 +366,8 @@ loadconfdefaults() {
 # get configuration overrides from master conf file
 loadconfdefaults "${masterconffile}"
 
-# set args to arguements before running shift parsing
-args="$*"
+# display command line used to run
+gl_log "$0 ($version) command line : $0 $*"
 
 # get any commandline arguments
 while [ "$1" != "" ]; do
@@ -440,10 +440,6 @@ noconf=$(gl_getvar "number" "${dflt_noconf}" 0 "${glob_noconf}" 0 "${vm_noconf}"
 # set global gl_noconf variable; used in gl_run and other places
 gl_noconf=${noconf}
 
-
-# display command line used to run
-gl_log "$0 ($version) command line : $0 ${args}"
-
 # set initial runbackup var
 runbackup=$(gl_getvar "string" "${dflt_runbackup}" 0 "${glob_runbackup}" 0 "${vm_runbackup}" 0 "${cli_runbackup}" 0)
 # check master safety switch first. Must be set to 1 to continue
@@ -454,7 +450,7 @@ fi
 
 # sanity checks
 # make sure the commands we need to run are available
-commlist="vboxmanage df logger cat gawk grep"
+commlist="vboxmanage df du logger cat gawk grep"
 for comm in ${commlist}; do
   command -v ${comm} >& /dev/null
   status=$?
@@ -721,8 +717,10 @@ for vm in ${vms}; do
             waitstate=$(vboxmanage showvminfo "${vmname}" --machinereadable | grep -E "^VMState=" | cut -d'"' -f2)
           fi
 
+          ## possible infinite loop here if waitstate never changes
+          ## fix this later
           while [ "${waitstate}" != "poweroff" ]; do
-            gl_log "    Waiting for VM to shutdown"
+            gl_log "     Waiting for VM to shutdown"
             sleep 5
             waitstate=$(vboxmanage showvminfo "${vmname}" --machinereadable | grep -E "^VMState=" | cut -d'"' -f2)
           done
@@ -741,16 +739,15 @@ for vm in ${vms}; do
         # Step 1 create VM clone. MUCH faster then exporting to OVA.
         # Reasoning: Minimize system downtime. Convert to OVA, if needed, AFTER cloning is completed
 
-        if [[ ! -d "${exportdir}"/. ]]; then
-          freedisk=0
-        else
-          freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
-        fi
-          
-        gl_log "    Disk free before clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
-
         backupname="${vmname}-${timestamp}${backuptag}"
         gl_log "    Begin Clone : [${backupname}]"
+
+        freedisk=0
+        if [[ -d "${exportdir}"/. ]]; then
+          freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
+        fi
+        gl_log "     Disk free before clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
+
         SECONDS=0
         if [[ "${gl_dryrun}" -eq 1 ]]; then
           echo vboxmanage clonevm "${vmname}" --mode all \
@@ -765,13 +762,18 @@ for vm in ${vms}; do
         # only log output if error
         if [[ ${backupstatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
 
-        if [[ ! -d "${exportdir}"/. ]]; then
-          freedisk=0
-        else
+        exportdirsize=0
+        if [[ -d "${exportdir}"/"${backupname}" ]]; then
+          exportdirsize=$(du -sk "${exportdir}"/"${backupname}" | awk '{print $1}')
+        fi
+        gl_log "      Exportdir size: $(( ${exportdirsize} / 1024 ))MB"
+
+        freedisk=0
+        if [[ -d "${exportdir}"/. ]]; then
           freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
         fi
+        gl_log "     Disk free after clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
-        gl_log "    Disk free after clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
         gl_log "    End Clone export. $duration"
 
         # put vm back into original state, regardless of backupstatus
@@ -788,9 +790,8 @@ for vm in ${vms}; do
           # only log output if error
           if [[ ${startstatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
 
-          # you have to "start the VM becore you can put it back a pause state again..
+          # if state was paused.. put it back into a paused state
           if [[ "${foundstate}" == "paused" ]]; then
-            # if state was pasued.. put it back into a paused state
             if [[ "${gl_dryrun}" -eq 1 ]]; then
               echo vboxmanage controlvm "${vmname}" pause
               pausestatus=0
@@ -800,7 +801,6 @@ for vm in ${vms}; do
             fi
             # only log output if error
             if [[ ${pausestatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
-            gl_log "    End VM restore state. $duration"
           fi
           duration=$(gl_secstohms $SECONDS)
           gl_log "    End VM restore state. $duration"
@@ -826,16 +826,15 @@ for vm in ${vms}; do
           if [[ ${registerstatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
           gl_log "    End VM register for OVA export. $duration"
             
-          if [[ ! -d "${exportdir}"/. ]]; then
-            freedisk=0
-          else
-            freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
-          fi
-
-          gl_log "    Disk free before OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
-
           ovaname="${vmname}-${timestamp}.ova"
           gl_log "    Begin OVA export: [${ovaname}]"
+
+          freedisk=0
+          if [[ -d "${exportdir}"/. ]]; then
+            freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
+          fi
+          gl_log "     Disk free before OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
+
           SECONDS=0
           if [[ "${gl_dryrun}" -eq 1 ]]; then
             echo vboxmanage export "${backupname}" --output "${exportdir}/${ovaname}"
@@ -848,13 +847,18 @@ for vm in ${vms}; do
           # only log output if error
           if [[ ${backupstatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
 
-          if [[ ! -d "${exportdir}"/. ]]; then
-            freedisk=0
-          else
+          exportovasize=0
+          if [[ -f "${exportdir}"/"${ovaname}" ]]; then
+            exportovasize=$(du -sk "${exportdir}"/"${ovaname}" | awk '{print $1}')
+          fi
+          gl_log "      OVA size: $(( ${exportovasize} / 1024 ))MB"
+
+          freedisk=0
+          if [[ -d "${exportdir}"/. ]]; then
             freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
           fi
+          gl_log "     Disk free after OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
-          gl_log "    Disk free after OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
           gl_log "    End OVA export. $duration"
 
           gl_log "    Begin VM unregister from OVA export : [${backupname}] [${foundstate}]"
@@ -886,6 +890,7 @@ for vm in ${vms}; do
             for ((i=${versions}; i>=0; i--)); do
               if [[ ${i} -eq ${versions} ]]; then
                 if [[ -d "${backupfolder}.${i}" ]]; then
+                  gl_log "    Removing folder (version wrap) ${backupfolder}.${i}."
                   gl_run /bin/rm -rf "${backupfolder}.${i}"
                 fi
               elif [[ ${i} -eq 0 && ${versions} -gt 0 ]]; then
@@ -902,28 +907,28 @@ for vm in ${vms}; do
           else
             # remove backups older than daystokeep
             if [[ -d "${backupdir}/${vmname}" ]]; then
-              if [[ "${gl_dryrun}" -eq 1 ]]; then
-                find "${backupdir}/${vmname}" -type d -mtime +${daystokeep} | xargs echo /bin/rm -rf
-              else
-                find "${backupdir}/${vmname}" -type d -mtime +${daystokeep} | xargs /bin/rm -rf
-              fi
+              # get list of folders to delete
+              deldirs=$(find "${backupdir}/${vmname}" -type d -mtime +${daystokeep})
+              for deldir in ${deldirs}; do
+                gl_log "    Removing folder (+${daystokeep} days old) ${deldir}"
+                gl_run /bin/rm -rf "${deldir}"
+              done
             fi
             backupfolder=${backupdir}/${vmname}/${vmname}.${timestamp}
           fi
 
-          # Make latest backup folder
-          gl_run mkdir -p "${backupfolder}"
-
-          if [[ ! -d "${backupfolder}"/. ]]; then
-            freedisk=0
-          else
-            freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
-          fi
-
-          gl_log "    Disk free before move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
 
           # move export file to backup folder
           gl_log "    Begin VM move from export to backup : [${vmname}]"
+          # Make latest backup folder
+          gl_run mkdir -p "${backupfolder}"
+
+          freedisk=0
+          if [[ -d "${backupfolder}"/. ]]; then
+            freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
+          fi
+          gl_log "     Disk free before move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
+
           SECONDS=0
           if [[ "${type}" == "clone" ]]; then
             # move clone
@@ -935,13 +940,19 @@ for vm in ${vms}; do
             gl_run /bin/rm -rf "${exportdir}/${backupname}"
           fi
           duration=$(gl_secstohms $SECONDS)
-          if [[ ! -d "${backupfolder}"/. ]]; then
-            freedisk=0
-          else
+
+          backupfoldersize=0
+          if [[ -d "${backupfolder}"/. ]]; then
+            backupfoldersize=$(du -sk "${backupfolder}"/. | awk '{print $1}')
+          fi
+          gl_log "      Backup folder size: $(( ${backupfoldersize} / 1024 ))MB"
+
+          freedisk=0
+          if [[ -d "${backupfolder}"/. ]]; then
             freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
           fi
-          
-          gl_log "    Disk free after move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
+          gl_log "     Disk free after move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
+
           gl_log "    End VM move.  $duration"
 
         else
@@ -953,12 +964,14 @@ for vm in ${vms}; do
       else
         gl_log "  Savestate failed. Cannot backup [${vmname}]. See log."
       fi
+
       gl_run /bin/rm -f "${tmplog}"
+
       # end time of vm loop
       vmendsec=$(date +%s)
       duration=$(gl_secstohms $(( vmendsec - vmstartsec )))
-
       gl_log "-- [${vmname}] End backup [State:${foundstate}] $duration"
+
     else
       gl_log "${nobackupreason}"
     fi
