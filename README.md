@@ -54,6 +54,8 @@ Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [-
  *note: VMs with spaces " " in their name are not supported at this time. Sorry.*
   
  vbbu will attempt to put a running VM into "savestate" before running a backup. This saves the machine state and closes all attached data files so a backup can occur. After the initial clone is completed, the VM will be restarted into it's previous state before the backup.
+
+_NOTE: with Virtualbox 6.0.10 (all versions of 6 earlier then 6.0.10?) there is a bug in which if the VM is on an NFS (and possibly SMB) share, AND you use "savestate", the clone of the VM will fail with error VBOX_E_IPRT_ERROR (0x80BB0005). This is a known issue. (https://www.virtualbox.org/ticket/18811). The workaround is to either run Virtualbox 5.2.X, or move your VMs to a local ext4 filesystem, or use the acpi option outlined below. Will update this if there are changes._
  
  ### Config Variables
  These variables are set either by default (in the shell script itself), the master config file (/etc/vbbu.conf), the individual VM config file (under /etc/vbbu.d) or on the command line.
