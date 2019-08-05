@@ -35,7 +35,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.26
+version=2.27
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -237,7 +237,7 @@ nobackupreason=""
 
 # tag to use to identify clones and backups created by us. We don't back these up at all
 # vms ending in this, we ignore completly, in case backups "overlap"
-backuptag="-vboxbu"
+backuptag="-vbbu"
 
 # =======================================================
 usage () {
