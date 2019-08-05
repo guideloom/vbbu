@@ -193,172 +193,123 @@ restart acpid daemon with
  run a dry-run backup on all VMs listed in /etc/vm.lst in ova format
   
  
-#### Sample syslog output
+#### Sample output and syslog output
 ```
-Jul 25 23:00:01 dev01 vbbu: -- [Buildroot 2018.02] VMs with space in their names are not supported at this time. Skipping
-Jul 25 23:00:01 dev01 vbbu: -- [vl001] cannot backup. VM day mismatch. [VM days:Wed Sat] [Today:Thu or 25]
-Jul 25 23:00:01 dev01 vbbu: -- [vl002] cannot backup. VM day mismatch. [VM days:Wed Sat] [Today:Thu or 25]
-Jul 25 23:00:01 dev01 vbbu: -- [vpn1] cannot backup. VM set to never backup. [VM days:never]
-Jul 25 23:00:02 dev01 vbbu: -- [vw001] Start backup [State:running] [Days:Mon Thu] [Type:ova] [Shutdown:savestate]
-Jul 25 23:00:02 dev01 vbbu:     Begin VM savestate
-Jul 25 23:00:57 dev01 vbbu:     End VM savestate. 00:00:55
-Jul 25 23:00:57 dev01 vbbu:     Begin Clone : [vw001-20190725-230002-vboxbu]
-Jul 25 23:00:57 dev01 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
-Jul 25 23:14:53 dev01 vbbu:       Exportdir size: 82892MB
-Jul 25 23:14:53 dev01 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1628012MB
-Jul 25 23:14:53 dev01 vbbu:     End Clone export. 00:13:56
-Jul 25 23:14:53 dev01 vbbu:     Begin VM restore state
-Jul 25 23:15:07 dev01 vbbu:     End VM restore state. 00:00:14
-Jul 25 23:15:07 dev01 vbbu:     Begin VM register for OVA export : [vw001-20190725-230002-vboxbu] [running]
-Jul 25 23:15:07 dev01 vbbu:     End VM register for OVA export. 00:00:00
-Jul 25 23:15:07 dev01 vbbu:     Begin OVA export: [vw001-20190725-230002.ova]
-Jul 25 23:15:07 dev01 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1628012MB
-Jul 25 23:52:33 dev01 vbbu:       OVA size: 52248MB
-Jul 25 23:52:33 dev01 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1575764MB
-Jul 25 23:52:33 dev01 vbbu:     End OVA export. 00:37:26
-Jul 25 23:52:33 dev01 vbbu:     Begin VM unregister from OVA export : [vw001-20190725-230002-vboxbu] [running]
-Jul 25 23:52:33 dev01 vbbu:     End VM unregister from OVA export. 00:00:00
-Jul 25 23:52:33 dev01 vbbu:     Removing folder (+14 days old) /mnt/usb1/backup/vms/vw001/vw001.20190708-220002
-Jul 25 23:52:34 dev01 vbbu:     Begin VM move from export to backup : [vw001]
-Jul 25 23:52:34 dev01 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/vw001/vw001.20190725-230002 : 4895272MB
-Jul 25 23:58:11 dev01 vbbu:       Backup folder size: 52248MB
-Jul 25 23:58:12 dev01 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/vw001/vw001.20190725-230002 : 4843024MB
-Jul 25 23:58:12 dev01 vbbu:     End VM move.  00:05:37
-Jul 25 23:58:12 dev01 vbbu: -- [vw001] End backup [State:running] 00:58:10
-Jul 25 23:58:12 dev01 vbbu: -- [vl005] cannot backup. VM day mismatch. [VM days:Mon] [Today:Thu or 25]
-Jul 25 23:58:12 dev01 vbbu: -- [vl006] cannot backup. VM day mismatch. [VM days:Tue] [Today:Thu or 25]
-Jul 25 23:58:12 dev01 vbbu: -- [vl003] cannot backup. VM day mismatch. [VM days:Sat Mon Wed Fri] [Today:Thu or 25]
-Jul 25 23:58:12 dev01 vbbu: -- [vl004] cannot backup. VM day mismatch. [VM days:Sun] [Today:Thu or 25]
-Jul 25 23:58:13 dev01 vbbu: -- [vl007] Start backup [State:running] [Days:Sun Tue Thu] [Type:ova] [Shutdown:savestate]
-Jul 25 23:58:13 dev01 vbbu:     Begin VM savestate
-Jul 25 23:58:22 dev01 vbbu:     End VM savestate. 00:00:09
-Jul 25 23:58:22 dev01 vbbu:     Begin Clone : [vl007-20190725-235813-vboxbu]
-Jul 25 23:58:22 dev01 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
-Jul 26 00:41:39 dev01 vbbu:       Exportdir size: 261723MB
-Jul 26 00:41:39 dev01 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1449181MB
-Jul 26 00:41:39 dev01 vbbu:     End Clone export. 00:43:17
-Jul 26 00:41:39 dev01 vbbu:     Begin VM restore state
-Jul 26 00:41:41 dev01 vbbu:     End VM restore state. 00:00:02
-Jul 26 00:41:41 dev01 vbbu:     Begin VM register for OVA export : [vl007-20190725-235813-vboxbu] [running]
-Jul 26 00:41:41 dev01 vbbu:     End VM register for OVA export. 00:00:00
-Jul 26 00:41:41 dev01 vbbu:     Begin OVA export: [vl007-20190725-235813.ova]
-Jul 26 00:41:41 dev01 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1449181MB
-Jul 26 02:29:11 dev01 vbbu:       OVA size: 140291MB
-Jul 26 02:29:11 dev01 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1308890MB
-Jul 26 02:29:11 dev01 vbbu:     End OVA export. 01:47:30
-Jul 26 02:29:11 dev01 vbbu:     Begin VM unregister from OVA export : [vl007-20190725-235813-vboxbu] [running]
-Jul 26 02:29:11 dev01 vbbu:     End VM unregister from OVA export. 00:00:00
-Jul 26 02:29:11 dev01 vbbu:     Removing folder (+7 days old) /mnt/usb1/backup/vms/vl007/vl007.20190716-220931
-Jul 26 02:29:13 dev01 vbbu:     Begin VM move from export to backup : [vl007]
-Jul 26 02:29:13 dev01 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/vl007/vl007.20190725-235813 : 4990130MB
-Jul 26 02:49:14 dev01 vbbu:       Backup folder size: 140291MB
-Jul 26 02:49:14 dev01 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/vl007/vl007.20190725-235813 : 4849839MB
-Jul 26 02:49:14 dev01 vbbu:     End VM move.  00:20:01
-Jul 26 02:49:14 dev01 vbbu: -- [vl007] End backup [State:running] 02:51:01
-Jul 26 02:49:14 dev01 vbbu: -- [qemu01] cannot backup. VM day mismatch. [VM days:Sun] [Today:Thu or 25]
-Jul 26 02:49:15 dev01 vbbu: -- [vl008] cannot backup. VM day mismatch. [VM days:Mon] [Today:Thu or 25]
-Jul 26 02:49:15 dev01 vbbu: -- [UB-18.01.02-base] Start backup [State:poweroff] [Days:Thu] [Type:ova] [Shutdown:savestate]
-Jul 26 02:49:15 dev01 vbbu:     Begin Clone : [UB-18.01.02-base-20190726-024915-vboxbu]
-Jul 26 02:49:15 dev01 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
-Jul 26 02:49:52 dev01 vbbu:       Exportdir size: 3920MB
-Jul 26 02:49:52 dev01 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1706984MB
-Jul 26 02:49:52 dev01 vbbu:     End Clone export. 00:00:37
-Jul 26 02:49:52 dev01 vbbu:     Begin VM register for OVA export : [UB-18.01.02-base-20190726-024915-vboxbu] [poweroff]
-Jul 26 02:49:52 dev01 vbbu:     End VM register for OVA export. 00:00:00
-Jul 26 02:49:52 dev01 vbbu:     Begin OVA export: [UB-18.01.02-base-20190726-024915.ova]
-Jul 26 02:49:52 dev01 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1706984MB
-Jul 26 02:51:32 dev01 vbbu:       OVA size: 1462MB
-Jul 26 02:51:32 dev01 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1705521MB
-Jul 26 02:51:32 dev01 vbbu:     End OVA export. 00:01:40
-Jul 26 02:51:32 dev01 vbbu:     Begin VM unregister from OVA export : [UB-18.01.02-base-20190726-024915-vboxbu] [poweroff]
-Jul 26 02:51:32 dev01 vbbu:     End VM unregister from OVA export. 00:00:00
-Jul 26 02:51:32 dev01 vbbu:     Removing folder (+7 days old) /mnt/usb1/backup/vms/UB-18.01.02-base/UB-18.01.02-base.20190712-015009
-Jul 26 02:51:32 dev01 vbbu:     Begin VM move from export to backup : [UB-18.01.02-base]
-Jul 26 02:51:32 dev01 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/UB-18.01.02-base/UB-18.01.02-base.20190726-024915 : 4851301MB
-Jul 26 02:51:34 dev01 vbbu:       Backup folder size: 1462MB
-Jul 26 02:51:34 dev01 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/UB-18.01.02-base/UB-18.01.02-base.20190726-024915 : 4849839MB
-Jul 26 02:51:34 dev01 vbbu:     End VM move.  00:00:02
-Jul 26 02:51:34 dev01 vbbu: -- [UB-18.01.02-base] End backup [State:poweroff] 00:02:19
-Jul 26 02:51:34 dev01 vbbu: -- [vl009] cannot backup. VM day mismatch. [VM days:Wed] [Today:Thu or 25]
-Jul 26 02:51:34 dev01 vbbu: -- [di1] cannot backup. VM day mismatch. [VM days:Tue] [Today:Thu or 25]
-Jul 26 02:51:34 dev01 vbbu: -- [di2] cannot backup. VM day mismatch. [VM days:Wed] [Today:Thu or 25]
-Jul 26 02:51:35 dev01 vbbu: -- [di3] Start backup [State:running] [Days:Thu] [Type:ova] [Shutdown:savestate]
-Jul 26 02:51:35 dev01 vbbu:     Begin VM savestate
-Jul 26 02:51:39 dev01 vbbu:     End VM savestate. 00:00:04
-Jul 26 02:51:39 dev01 vbbu:     Begin Clone : [di3-20190726-025135-vboxbu]
-Jul 26 02:51:39 dev01 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
-Jul 26 02:52:51 dev01 vbbu:       Exportdir size: 7625MB
-Jul 26 02:52:51 dev01 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1703279MB
-Jul 26 02:52:51 dev01 vbbu:     End Clone export. 00:01:12
-Jul 26 02:52:51 dev01 vbbu:     Begin VM restore state
-Jul 26 02:52:53 dev01 vbbu:     End VM restore state. 00:00:02
-Jul 26 02:52:53 dev01 vbbu:     Begin VM register for OVA export : [di3-20190726-025135-vboxbu] [running]
-Jul 26 02:52:53 dev01 vbbu:     End VM register for OVA export. 00:00:00
-Jul 26 02:52:53 dev01 vbbu:     Begin OVA export: [di3-20190726-025135.ova]
-Jul 26 02:52:53 dev01 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1703279MB
-Jul 26 02:56:16 dev01 vbbu:       OVA size: 2672MB
-Jul 26 02:56:16 dev01 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1700607MB
-Jul 26 02:56:16 dev01 vbbu:     End OVA export. 00:03:23
-Jul 26 02:56:16 dev01 vbbu:     Begin VM unregister from OVA export : [di3-20190726-025135-vboxbu] [running]
-Jul 26 02:56:16 dev01 vbbu:     End VM unregister from OVA export. 00:00:00
-Jul 26 02:56:16 dev01 vbbu:     Begin VM move from export to backup : [di3]
-Jul 26 02:56:16 dev01 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/di3/di3.20190726-025135 : 4849839MB
-Jul 26 02:56:18 dev01 vbbu:       Backup folder size: 2672MB
-Jul 26 02:56:18 dev01 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/di3/di3.20190726-025135 : 4847166MB
-Jul 26 02:56:18 dev01 vbbu:     End VM move.  00:00:02
-Jul 26 02:56:18 dev01 vbbu: -- [di3] End backup [State:running] 00:04:43
-Jul 26 02:56:18 dev01 vbbu: -- [dvl001] Start backup [State:running] [Days:Thu] [Type:ova] [Shutdown:savestate]
-Jul 26 02:56:18 dev01 vbbu:     Begin VM savestate
-Jul 26 02:56:21 dev01 vbbu:     End VM savestate. 00:00:03
-Jul 26 02:56:21 dev01 vbbu:     Begin Clone : [dvl001-20190726-025618-vboxbu]
-Jul 26 02:56:21 dev01 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
-Jul 26 02:58:09 dev01 vbbu:       Exportdir size: 11368MB
-Jul 26 02:58:09 dev01 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1699536MB
-Jul 26 02:58:09 dev01 vbbu:     End Clone export. 00:01:48
-Jul 26 02:58:09 dev01 vbbu:     Begin VM restore state
-Jul 26 02:58:11 dev01 vbbu:     End VM restore state. 00:00:02
-Jul 26 02:58:11 dev01 vbbu:     Begin VM register for OVA export : [dvl001-20190726-025618-vboxbu] [running]
-Jul 26 02:58:11 dev01 vbbu:     End VM register for OVA export. 00:00:00
-Jul 26 02:58:11 dev01 vbbu:     Begin OVA export: [dvl001-20190726-025618.ova]
-Jul 26 02:58:11 dev01 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1699536MB
-Jul 26 03:03:52 dev01 vbbu:       OVA size: 4499MB
-Jul 26 03:03:52 dev01 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1695036MB
-Jul 26 03:03:52 dev01 vbbu:     End OVA export. 00:05:41
-Jul 26 03:03:52 dev01 vbbu:     Begin VM unregister from OVA export : [dvl001-20190726-025618-vboxbu] [running]
-Jul 26 03:03:52 dev01 vbbu:     End VM unregister from OVA export. 00:00:00
-Jul 26 03:03:52 dev01 vbbu:     Begin VM move from export to backup : [dvl001]
-Jul 26 03:03:52 dev01 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/dvl001/dvl001.20190726-025618 : 4847166MB
-Jul 26 03:03:56 dev01 vbbu:       Backup folder size: 4499MB
-Jul 26 03:03:56 dev01 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/dvl001/dvl001.20190726-025618 : 4842667MB
-Jul 26 03:03:56 dev01 vbbu:     End VM move.  00:00:04
-Jul 26 03:03:56 dev01 vbbu: -- [dvl001] End backup [State:running] 00:07:38
-Jul 26 03:03:56 dev01 vbbu: -- [scbase] cannot backup. VM day mismatch. [VM days:Sun] [Today:Thu or 25]
-Jul 26 03:03:56 dev01 vbbu: -- [di4] Start backup [State:running] [Days:] [Type:ova] [Shutdown:savestate]
-Jul 26 03:03:56 dev01 vbbu:     Begin VM savestate
-Jul 26 03:04:00 dev01 vbbu:     End VM savestate. 00:00:04
-Jul 26 03:04:00 dev01 vbbu:     Begin Clone : [di4-20190726-030356-vboxbu]
-Jul 26 03:04:00 dev01 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
-Jul 26 03:05:03 dev01 vbbu:       Exportdir size: 6289MB
-Jul 26 03:05:03 dev01 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1704615MB
-Jul 26 03:05:03 dev01 vbbu:     End Clone export. 00:01:03
-Jul 26 03:05:03 dev01 vbbu:     Begin VM restore state
-Jul 26 03:05:05 dev01 vbbu:     End VM restore state. 00:00:02
-Jul 26 03:05:05 dev01 vbbu:     Begin VM register for OVA export : [di4-20190726-030356-vboxbu] [running]
-Jul 26 03:05:05 dev01 vbbu:     End VM register for OVA export. 00:00:00
-Jul 26 03:05:05 dev01 vbbu:     Begin OVA export: [di4-20190726-030356.ova]
-Jul 26 03:05:05 dev01 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1704615MB
-Jul 26 03:08:10 dev01 vbbu:       OVA size: 2514MB
-Jul 26 03:08:10 dev01 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1702101MB
-Jul 26 03:08:10 dev01 vbbu:     End OVA export. 00:03:05
-Jul 26 03:08:10 dev01 vbbu:     Begin VM unregister from OVA export : [di4-20190726-030356-vboxbu] [running]
-Jul 26 03:08:10 dev01 vbbu:     End VM unregister from OVA export. 00:00:00
-Jul 26 03:08:10 dev01 vbbu:     Begin VM move from export to backup : [di4]
-Jul 26 03:08:10 dev01 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/di4/di4.20190726-030356 : 4842667MB
-Jul 26 03:08:12 dev01 vbbu:       Backup folder size: 2514MB
-Jul 26 03:08:12 dev01 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/di4/di4.20190726-030356 : 4840152MB
-Jul 26 03:08:12 dev01 vbbu:     End VM move.  00:00:02
-Jul 26 03:08:12 dev01 vbbu: -- [di4] End backup [State:running] 00:04:16
-Jul 26 03:08:12 dev01 vbbu: -- [dvl002] cannot backup. VM day mismatch. [VM days:Fri] [Today:Thu or 25]
+Aug  4 23:00:01 vm001 CRON[35585]: (vbox) CMD (/home/vbox/bin/vbbu --syslog --runbackup; /home/vbox/bin/vmsync.sh > /home/vbox/log/vmsync.log 2>&1)
+Aug  4 23:00:01 vm001 vbbu: -- [base] Start backup [State:poweroff] [Days:Sun] [Type:ova] [Shutdown:savestate]
+Aug  4 23:00:01 vm001 vbbu:     Begin Clone : [base-20190804-230001-vbbu]
+Aug  4 23:00:01 vm001 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
+Aug  4 23:00:58 vm001 vbbu:       Exportdir size: 5959MB
+Aug  4 23:00:58 vm001 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1704945MB
+Aug  4 23:00:58 vm001 vbbu:     End Clone export. 00:00:57
+Aug  4 23:00:58 vm001 vbbu:     Begin VM register for OVA export : [base-20190804-230001-vbbu] [poweroff]
+Aug  4 23:00:58 vm001 vbbu:     End VM register for OVA export. 00:00:00
+Aug  4 23:00:58 vm001 vbbu:     Begin OVA export: [base-20190804-230001.ova]
+Aug  4 23:00:58 vm001 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1704945MB
+Aug  4 23:03:59 vm001 vbbu:       OVA size: 2690MB
+Aug  4 23:03:59 vm001 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1702255MB
+Aug  4 23:03:59 vm001 vbbu:     End OVA export. 00:03:01
+Aug  4 23:03:59 vm001 vbbu:     Begin VM unregister from OVA export : [base-20190804-230001-vbbu] [poweroff]
+Aug  4 23:03:59 vm001 vbbu:     End VM unregister from OVA export. 00:00:00
+Aug  4 23:03:59 vm001 vbbu:     Begin VM move from export to backup : [base]
+Aug  4 23:03:59 vm001 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/base/base.20190804-230001 : 5811468MB
+Aug  4 23:04:02 vm001 vbbu:       Backup folder size: 2690MB
+Aug  4 23:04:02 vm001 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/base/base.20190804-230001 : 5808778MB
+Aug  4 23:04:02 vm001 vbbu:     End VM move.  00:00:03
+Aug  4 23:04:02 vm001 vbbu: -- [base] End backup [State:poweroff] 00:04:01
+Aug  4 23:04:02 vm001 vbbu: -- [dvl001] cannot backup. VM day mismatch. [VM days:Thu] [Today:Sun or 04]
+Aug  4 23:04:02 vm001 vbbu: -- [Buildroot 2018.02] VMs with space in their names are not supported at this time. Skipping
+Aug  4 23:04:02 vm001 vbbu: -- [UB-18.01.02-base] cannot backup. VM day mismatch. [VM days:Thu] [Today:Sun or 04]
+Aug  4 23:04:02 vm001 vbbu: -- [dvl002] cannot backup. VM day mismatch. [VM days:Fri] [Today:Sun or 04]
+Aug  4 23:04:02 vm001 vbbu: -- [dd01] cannot backup. VM day mismatch. [VM days:Tue] [Today:Sun or 04]
+Aug  4 23:04:03 vm001 vbbu: -- [dd02] cannot backup. VM day mismatch. [VM days:Wed] [Today:Sun or 04]
+Aug  4 23:04:03 vm001 vbbu: -- [dd03] cannot backup. VM day mismatch. [VM days:Thu] [Today:Sun or 04]
+Aug  4 23:04:03 vm001 vbbu: -- [dd04-after-wp] cannot backup. VM set to never backup. [VM days:never]
+Aug  4 23:04:03 vm001 vbbu: -- [dd04-b4-lamp] cannot backup. VM set to never backup. [VM days:never]
+Aug  4 23:04:03 vm001 vbbu: -- [dd04] cannot backup. VM set to never backup. [VM days:never]
+Aug  4 23:04:04 vm001 vbbu: -- [qemu01] Start backup [State:poweroff] [Days:Sun] [Type:ova] [Shutdown:savestate]
+Aug  4 23:04:04 vm001 vbbu:     Begin Clone : [qemu01-20190804-230404-vbbu]
+Aug  4 23:04:04 vm001 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
+Aug  4 23:07:00 vm001 vbbu:       Exportdir size: 17241MB
+Aug  4 23:07:00 vm001 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1693663MB
+Aug  4 23:07:00 vm001 vbbu:     End Clone export. 00:02:56
+Aug  4 23:07:00 vm001 vbbu:     Begin VM register for OVA export : [qemu01-20190804-230404-vbbu] [poweroff]
+Aug  4 23:07:00 vm001 vbbu:     End VM register for OVA export. 00:00:00
+Aug  4 23:07:00 vm001 vbbu:     Begin OVA export: [qemu01-20190804-230404.ova]
+Aug  4 23:07:00 vm001 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1693663MB
+Aug  4 23:15:24 vm001 vbbu:       OVA size: 6629MB
+Aug  4 23:15:24 vm001 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1687033MB
+Aug  4 23:15:24 vm001 vbbu:     End OVA export. 00:08:24
+Aug  4 23:15:24 vm001 vbbu:     Begin VM unregister from OVA export : [qemu01-20190804-230404-vbbu] [poweroff]
+Aug  4 23:15:24 vm001 vbbu:     End VM unregister from OVA export. 00:00:00
+Aug  4 23:15:24 vm001 vbbu:     Begin VM move from export to backup : [qemu01]
+Aug  4 23:15:24 vm001 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/qemu01/qemu01.20190804-230404 : 5808778MB
+Aug  4 23:15:29 vm001 vbbu:       Backup folder size: 6629MB
+Aug  4 23:15:29 vm001 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/qemu01/qemu01.20190804-230404 : 5802149MB
+Aug  4 23:15:29 vm001 vbbu:     End VM move.  00:00:05
+Aug  4 23:15:29 vm001 vbbu: -- [qemu01] End backup [State:poweroff] 00:11:25
+Aug  4 23:15:29 vm001 vbbu: -- [sc-vpn1] cannot backup. VM set to never backup. [VM days:never]
+Aug  4 23:15:29 vm001 vbbu: -- [vl001] cannot backup. VM day mismatch. [VM days:Wed Sat] [Today:Sun or 04]
+Aug  4 23:15:30 vm001 vbbu: -- [vl002] cannot backup. VM day mismatch. [VM days:Wed Sat] [Today:Sun or 04]
+Aug  4 23:15:30 vm001 vbbu: -- [vl003] cannot backup. VM day mismatch. [VM days:Sat Mon Wed Fri] [Today:Sun or 04]
+Aug  4 23:15:30 vm001 vbbu: -- [vl004] Start backup [State:running] [Days:Sun] [Type:ova] [Shutdown:savestate]
+Aug  4 23:15:30 vm001 vbbu:     Begin VM savestate
+Aug  4 23:15:58 vm001 vbbu:     End VM savestate. 00:00:28
+Aug  4 23:15:58 vm001 vbbu:     Begin Clone : [vl004-20190804-231530-vbbu]
+Aug  4 23:15:58 vm001 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
+Aug  4 23:50:39 vm001 vbbu:       Exportdir size: 194466MB
+Aug  4 23:50:39 vm001 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1516438MB
+Aug  4 23:50:39 vm001 vbbu:     End Clone export. 00:34:41
+Aug  4 23:50:39 vm001 vbbu:     Begin VM restore state
+Aug  4 23:50:49 vm001 vbbu:     End VM restore state. 00:00:10
+Aug  4 23:50:49 vm001 vbbu:     Begin VM register for OVA export : [vl004-20190804-231530-vbbu] [running]
+Aug  4 23:50:49 vm001 vbbu:     End VM register for OVA export. 00:00:00
+Aug  4 23:50:49 vm001 vbbu:     Begin OVA export: [vl004-20190804-231530.ova]
+Aug  4 23:50:49 vm001 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1516438MB
+Aug  5 01:29:53 vm001 vbbu:       OVA size: 110135MB
+Aug  5 01:29:53 vm001 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1406303MB
+Aug  5 01:29:53 vm001 vbbu:     End OVA export. 01:39:04
+Aug  5 01:29:53 vm001 vbbu:     Begin VM unregister from OVA export : [vl004-20190804-231530-vbbu] [running]
+Aug  5 01:29:53 vm001 vbbu:     End VM unregister from OVA export. 00:00:00
+Aug  5 01:29:53 vm001 vbbu:     Begin VM move from export to backup : [vl004]
+Aug  5 01:29:53 vm001 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/vl004/vl004.20190804-231530 : 5802149MB
+Aug  5 01:41:33 vm001 vbbu:       Backup folder size: 110135MB
+Aug  5 01:41:33 vm001 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/vl004/vl004.20190804-231530 : 5692014MB
+Aug  5 01:41:33 vm001 vbbu:     End VM move.  00:11:40
+Aug  5 01:41:33 vm001 vbbu: -- [vl004] End backup [State:running] 02:26:03
+Aug  5 01:41:33 vm001 vbbu: -- [vl005] cannot backup. VM day mismatch. [VM days:Mon] [Today:Sun or 04]
+Aug  5 01:41:33 vm001 vbbu: -- [vl006] cannot backup. VM day mismatch. [VM days:Tue] [Today:Sun or 04]
+Aug  5 01:41:34 vm001 vbbu: -- [vl007] Start backup [State:running] [Days:Sun Tue Thu] [Type:ova] [Shutdown:savestate]
+Aug  5 01:41:34 vm001 vbbu:     Begin VM savestate
+Aug  5 01:41:43 vm001 vbbu:     End VM savestate. 00:00:09
+Aug  5 01:41:43 vm001 vbbu:     Begin Clone : [vl007-20190805-014134-vbbu]
+Aug  5 01:41:43 vm001 vbbu:      Disk free before clonevm /mnt/lv001-r0/backup/vms : 1710904MB
+Aug  5 02:25:05 vm001 vbbu:       Exportdir size: 261742MB
+Aug  5 02:25:05 vm001 vbbu:      Disk free after clonevm /mnt/lv001-r0/backup/vms : 1449162MB
+Aug  5 02:25:05 vm001 vbbu:     End Clone export. 00:43:22
+Aug  5 02:25:05 vm001 vbbu:     Begin VM restore state
+Aug  5 02:25:07 vm001 vbbu:     End VM restore state. 00:00:02
+Aug  5 02:25:07 vm001 vbbu:     Begin VM register for OVA export : [vl007-20190805-014134-vbbu] [running]
+Aug  5 02:25:07 vm001 vbbu:     End VM register for OVA export. 00:00:00
+Aug  5 02:25:07 vm001 vbbu:     Begin OVA export: [vl007-20190805-014134.ova]
+Aug  5 02:25:07 vm001 vbbu:      Disk free before OVA export /mnt/lv001-r0/backup/vms : 1449162MB
+Aug  5 04:16:31 vm001 vbbu:       OVA size: 140070MB
+Aug  5 04:16:31 vm001 vbbu:      Disk free after OVA export /mnt/lv001-r0/backup/vms : 1309092MB
+Aug  5 04:16:31 vm001 vbbu:     End OVA export. 01:51:24
+Aug  5 04:16:31 vm001 vbbu:     Begin VM unregister from OVA export : [vl007-20190805-014134-vbbu] [running]
+Aug  5 04:16:31 vm001 vbbu:     End VM unregister from OVA export. 00:00:00
+Aug  5 04:16:31 vm001 vbbu:     Removing folder (+7 days old) /mnt/usb1/backup/vms/vl007/vl007.20190723-232734
+Aug  5 04:16:32 vm001 vbbu:     Removing folder (+7 days old) /mnt/usb1/backup/vms/vl007/vl007.20190725-235813
+Aug  5 04:16:33 vm001 vbbu:     Begin VM move from export to backup : [vl007]
+Aug  5 04:16:33 vm001 vbbu:      Disk free before move to backup /mnt/usb1/backup/vms/vl007/vl007.20190805-014134 : 5973175MB
+Aug  5 04:32:04 vm001 vbbu:       Backup folder size: 140070MB
+Aug  5 04:32:04 vm001 vbbu:      Disk free after move to backup /mnt/usb1/backup/vms/vl007/vl007.20190805-014134 : 5833105MB
+Aug  5 04:32:04 vm001 vbbu:     End VM move.  00:15:31
+Aug  5 04:32:04 vm001 vbbu: -- [vl007] End backup [State:running] 02:50:30
+Aug  5 04:32:04 vm001 vbbu: -- [vl008] cannot backup. VM day mismatch. [VM days:Mon] [Today:Sun or 04]
+Aug  5 04:32:04 vm001 vbbu: -- [vl009] cannot backup. VM day mismatch. [VM days:Wed] [Today:Sun or 04]
+Aug  5 04:32:04 vm001 vbbu: -- [scvw001] cannot backup. VM day mismatch. [VM days:Mon Thu] [Today:Sun or 04]
+Aug  5 04:32:05 vm001 vbbu: -- [dd05] cannot backup. VM set to never backup. [VM days:never]
 ```
 ---
    Copyright (C) 2019  GuideLoom Inc./Trevor Paquette
