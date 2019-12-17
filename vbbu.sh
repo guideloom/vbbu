@@ -35,7 +35,7 @@ fi
 . ${glfunc_path}
     
 # version number of script
-version=2.27
+version=2.28
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -444,7 +444,7 @@ gl_noconf=${noconf}
 runbackup=$(gl_getvar "string" "${dflt_runbackup}" 0 "${glob_runbackup}" 0 "${vm_runbackup}" 0 "${cli_runbackup}" 0)
 # check master safety switch first. Must be set to 1 to continue
 if [[ "${runbackup}" != "yes" ]]; then
-  echo "Runbackup not set to yes. Safety switch kicking in. Exiting."
+  gl_err "Runbackup not set to yes. Safety switch kicking in. Exiting."
   exit 1
 fi
 
@@ -455,7 +455,7 @@ for comm in ${commlist}; do
   command -v ${comm} >& /dev/null
   status=$?
   if [[ ${status} -ne 0 ]]; then
-    gl_log "Error: ${comm} command not found. Check your executable path or not installed. Exiting."
+    gl_err "${comm} command not found. Check your executable path or not installed. Exiting."
     exit 1
   fi
 done
@@ -466,8 +466,7 @@ done
 state=$(gl_getvar "string" "${dflt_state}" 0 "${glob_state}" 0 "${vm_state}" 0 "${cli_state}" 0)
 case "${state}" in
   running | stopped | paused | saved | poweroff | "" ) ;;
-  * ) echo "Unknown state \"${state}\""
-      echo
+  * ) gl_err "Unknown state \"${state}\""
       usage
       exit
 esac
@@ -476,8 +475,7 @@ esac
 backuptype=$(gl_getvar "string" "${dflt_backuptype}" 0 "${glob_backuptype}" 0 "${vm_backuptype}" 0 "${cli_backuptype}" 0)
 case "${backuptype}" in
   ova | clone | "" ) ;;
-  * ) echo "Unknown type \"${backuptype}\""
-      echo
+  * ) gl_err "Unknown type \"${backuptype}\""
       usage
       exit
 esac
@@ -485,14 +483,14 @@ esac
 # check versions
 versions=$(gl_getvar "number" "${dflt_versions}" 0 "${glob_versions}" 0 "${vm_versions}" 0 "${cli_versions}" 0)
 if [[ $(gl_isnum "${versions}") != "1" ]]; then
-  echo "Error: versions must be a number. Exiting."
+  gl_err "versions must be a number. Exiting."
   exit 1
 fi
 
 # check daystokeep
 daystokeep=$(gl_getvar "number" "${dflt_daystokeep}" 0 "${glob_daystokeep}" 0 "${vm_daystokeep}" 0 "${cli_daystokeep}" 0)
 if [[ $(gl_isnum "${daystokeep}") != "1" ]]; then
-  echo "Error: daystokeep must be a number. Exiting."
+  gl_err "daystokeep must be a number. Exiting."
   exit 1
 fi
 
@@ -501,7 +499,7 @@ backupdir=$(gl_getvar "string" "${dflt_backupdir}" 0 "${glob_backupdir}" 0 "${vm
 # Make sure backupdir is set
 if [[ "${backupdir}" == "" ]]; then
 
-  gl_log "Error: Variable backupdir not set. Exiting."
+  gl_err "Variable backupdir not set. Exiting."
   exit 1
 
 elif [[ ! -d "${backupdir}" ]]; then
@@ -511,7 +509,7 @@ elif [[ ! -d "${backupdir}" ]]; then
   status=$?
 
   if [[ ${status} -ne 0 ]]; then
-    gl_log "Backupdir [${backupdir}] not found or cannot create. Exiting."
+    gl_err "Backupdir [${backupdir}] not found or cannot create. Exiting."
     exit 1
   fi
 
@@ -522,7 +520,7 @@ testfile="${backupdir}"/testfile$$
 gl_run touch "${testfile}"
 status=$?
 if [[ ${status} -ne 0 ]]; then
-  gl_log "Cannot create files under ${backupdir}. Exiting."
+  gl_err "Cannot create files under ${backupdir}. Exiting."
   exit 1
 else
   # Success. We have a working BACKUPDIR. Remove testfile
@@ -542,7 +540,7 @@ if [[ ! -d "${exportdir}" ]]; then
   gl_run mkdir -p "${exportdir}"
   status=$?
   if [[ ${status} -ne 0 ]]; then
-    gl_log "Exportdir [${exportdir}] not found or cannot create. Exiting."
+    gl_err "Exportdir [${exportdir}] not found or cannot create. Exiting."
     exit 1
   fi
 fi
@@ -552,7 +550,7 @@ testfile="${exportdir}"/testfile$$
 gl_run touch "${testfile}"
 status=$?
 if [[ ${status} -ne 0 ]]; then
-  gl_log "Cannot create files under ${exportdir}. Exiting."
+  gl_err "Cannot create files under ${exportdir}. Exiting."
   exit 1
 else
   # Success. we have a working exportdir. Remove testfile
@@ -574,7 +572,7 @@ else
       # grab the candidate list from the file
       vms=$(cat "${list}" | ${gl_sedsbc} | awk '{print $1}')
     else
-      gl_log "VM list [${list}] is not a file. Exiting."
+      gl_err "VM list [${list}] is not a file. Exiting."
       exit 1
     fi
   else
