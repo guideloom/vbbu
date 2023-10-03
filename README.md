@@ -12,30 +12,35 @@ Command line options:
 ```
 Usage: ./vbbu [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [--help|-h]
           [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]
-          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER] [--confdir PATH_TO_CONF_FILES
-          [--acpi] [--noconf] [--nodays] [--runbackup]
+          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER] [--confdir PATH_TO_CONF_FILES]
+          [--acpi] [--noconf] [--nodays] [--runbackup] [--backupgroup GROUPNAME]
+          [--acpiwaittime N] [--acpiwaitcycles N] [--acpiwaitpoweroff]
           [--versions N] [--daystokeep N] [VMNAME|VMUUID]...
 
- Version : x.xx
-       --verbose     = print lines as they run. Useful for debugging only
-       --syslog      = send output to syslog as well as stdout [Default: 0]
-       --syslogid    = syslog id string to send to syslog [Default: vbbu]
-       --list        = full path to list of VMs to backup
-       --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored
-       --nodays      = ignore days option in conf files. Translation: run every day. [Default: off]
-       --state       = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]
-       --type        = type of backup to create. One of ova|clone. [Default: ova]
-       --exportdir   = path to temporary export directory, [Default: /mnt/lv001-r0/backup/vms]
-       --backupdir   = path to final backup directory. [Default: /mnt/usb1/backup/vms]
-       --versions    = number of versions to keep in BACKUPDIR. [Default: 2]
-       --daystokeep  = number of days to keep backups for. Ones older are removed. [Default: 0]
-                       Note: if daystokeep is set, this OVERRIDES the --versions option.
-       --acpi        = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart.
-       --dryrun      = Limited run. Display commands, and do not run them. [Default: off]
-       --help        = this help info
-       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and pausing VMs
+ Version : 2.32
+       --verbose      = print lines as they run. Useful for debugging only
+       --syslog       = send output to syslog as well as stdout [Default: 0]
+       --syslogid     = syslog id string to send to syslog [Default: vbbu]
+       --list         = full path to list of VMs to backup
+       --noconf       = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored
+       --nodays       = ignore days option in conf files. Translation: run every day. [Default: off]
+       --state        = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]
+       --type         = type of backup to create. One of ova|clone. [Default: ova]
+       --exportdir    = path to temporary export directory, [Default: /mnt/lv001-r0/backup/vms]
+       --backupdir    = path to final backup directory. [Default: /mnt/usb1/backup/vms]
+       --backupgroup  = group folder under backup directory. [Default: ]
+       --versions     = number of versions to keep in BACKUPDIR. [Default: 2]
+       --daystokeep   = number of days to keep backups for. Ones older are removed. [Default: 0]
+                        Note: if daystokeep is set, this OVERRIDES the --versions option.
+       --acpi         = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart.
+       --acpiwaittime     = number of seconds to wait between acpi shutdown checks. [Default: 5]
+       --acpiwaitcycles   = number of cycles to check for acpi shutdown. [Default: 50]
+       --acpiwaitpoweroff = if after acpiwaitcycles, the VM still hasn't shutdown, try a forced poweroff, otherwise skip
+       --dryrun       = Limited run. Display commands, and do not run them. [Default: off]
+       --help         = this help info
+       --runbackup    = Actually run. Safety switch. Prevents accidently running backups and pausing VMs
 
-       VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list.
+       VMNAME|VMUUID  = VM to backup. Can list more then one. If not set, fallback to list.
 
   Note: Options can also be set in /etc/vbbu.conf or /etc/vbbu.d/VMNAME.conf
  ```
