@@ -31,11 +31,15 @@ if [[ ! -f ${glfunc_path} ]]; then
   exit 1
 fi
 
+## set umask for folders/files
+## not working??
+##umask u=rwx,g=rwx,o=rx
+
 # load up the functions
 . ${glfunc_path}
     
 # version number of script
-version=2.28
+version=2.32
 
 # variables can be set in one of 4 places, in order of increasing precedent.
 # 1) Default     value in this file.
@@ -129,6 +133,13 @@ vm_backupdir=
 cli_backupdir=
 backupdir=
 
+# backups are actually moved to a "group" folder under backupdir
+dflt_backupgroup=""
+glob_backupgroup=
+vm_backupgroup=
+cli_backupgroup=
+backupgroup=
+
 # number of versions to keep, in addition to main backup
 # versions are numbered folder, folder.1, folder.2.. etc. highest number is cycled out and others are renamed. Think syslog.
 dflt_versions=2
@@ -208,6 +219,29 @@ vm_acpi=
 cli_acpi=
 acpi=
 
+# seconds to wait between acpi shutdown checks
+dflt_acpiwaittime=5
+glob_acpiwaittime=
+vm_acpiwaittime=
+cli_acpiwaittime=
+acpiwaittime=
+
+# number of times to wait for check, otherwise possible infinite loop
+dflt_acpiwaitcycles=50
+glob_acpiwaitcycles=
+vm_acpiwaitcycles=
+cli_acpiwaitcycles=
+acpiwaitcycles=
+
+# if after acpiwaitcycles, the VM still hasn't shutdown, try a forced poweroff
+# yes = try forced poweroff
+# no = abandon backup of VM, contineue to next
+dflt_acpiwaitpoweroff="no"
+glob_acpiwaitpoweroff=
+vm_acpiwaitpoweroff=
+cli_acpiwaitpoweroff=
+acpiwaitpoweroff=
+
 # list of VMs to backup
 # just here to initialize the variables
 vms=""
@@ -243,30 +277,35 @@ backuptag="-vbbu"
 usage () {
   echo "Usage: $0 [--verbose] [--syslog] [--syslogid SYSLOG_ID_STRING] [--dryrun] [--help|-h]"
   echo "          [--list PATH_TO_VM_FILE_LIST] [--state running|stopped|paused|saved|poweroff] [--type ova|clone]"
-  echo "          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER] [--confdir PATH_TO_CONF_FILES"
-  echo "          [--acpi] [--noconf] [--nodays] [--runbackup]"
+  echo "          [--exportdir PATH_TO_VM_EXPORT_FOLDER] [--backupdir PATH_TO_VM_BACKUP_FOLDER] [--confdir PATH_TO_CONF_FILES]"
+  echo "          [--acpi] [--noconf] [--nodays] [--runbackup] [--backupgroup GROUPNAME]"
+  echo "          [--acpiwaittime N] [--acpiwaitcycles N] [--acpiwaitpoweroff]"
   echo "          [--versions N] [--daystokeep N] [VMNAME|VMUUID]..."
   echo ""
   echo " Version : ${version}"
-  echo "       --verbose     = print lines as they run. Useful for debugging only"
-  echo "       --syslog      = send output to syslog as well as stdout [Default: ${dflt_syslog}]"
-  echo "       --syslogid    = syslog id string to send to syslog [Default: ${dflt_syslogid}]"
-  echo "       --list        = full path to list of VMs to backup"
-  echo "       --noconf      = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored"
-  echo "       --nodays      = ignore days option in conf files. Translation: run every day. [Default: off]"
-  echo "       --state       = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]"
-  echo "       --type        = type of backup to create. One of ova|clone. [Default: ${dflt_backuptype}]" 
-  echo "       --exportdir   = path to temporary export directory, [Default: ${dflt_exportdir}]"
-  echo "       --backupdir   = path to final backup directory. [Default: ${dflt_backupdir}]"
-  echo "       --versions    = number of versions to keep in BACKUPDIR. [Default: ${dflt_versions}]"
-  echo "       --daystokeep  = number of days to keep backups for. Ones older are removed. [Default: ${dflt_daystokeep}]"
-  echo "                       Note: if daystokeep is set, this OVERRIDES the --versions option."
-  echo "       --acpi        = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart."
-  echo "       --dryrun      = Limited run. Display commands, and do not run them. [Default: off]"
-  echo "       --help        = this help info"
-  echo "       --runbackup   = Actually run. Safety switch. Prevents accidently running backups and pausing VMs"
+  echo "       --verbose      = print lines as they run. Useful for debugging only"
+  echo "       --syslog       = send output to syslog as well as stdout [Default: ${dflt_syslog}]"
+  echo "       --syslogid     = syslog id string to send to syslog [Default: ${dflt_syslogid}]"
+  echo "       --list         = full path to list of VMs to backup"
+  echo "       --noconf       = do not use config files. Master conf file/vm conf files under conf folder (/etc/vbbu.d) are ignored"
+  echo "       --nodays       = ignore days option in conf files. Translation: run every day. [Default: off]"
+  echo "       --state        = only backup VMs whose status is one of running|stopped|paused|saved|poweroff. [Default: not set, aka any]"
+  echo "       --type         = type of backup to create. One of ova|clone. [Default: ${dflt_backuptype}]" 
+  echo "       --exportdir    = path to temporary export directory, [Default: ${dflt_exportdir}]"
+  echo "       --backupdir    = path to final backup directory. [Default: ${dflt_backupdir}]"
+  echo "       --backupgroup  = group folder under backup directory. [Default: ${dflt_backupgroup}]"
+  echo "       --versions     = number of versions to keep in BACKUPDIR. [Default: ${dflt_versions}]"
+  echo "       --daystokeep   = number of days to keep backups for. Ones older are removed. [Default: ${dflt_daystokeep}]"
+  echo "                        Note: if daystokeep is set, this OVERRIDES the --versions option."
+  echo "       --acpi         = issue acpishutdown instead of savestate. Fixes bug in vbox 5.X sometimes causes kernel panic on vm restart."
+  echo "       --acpiwaittime     = number of seconds to wait between acpi shutdown checks. [Default: ${dflt_acpiwaittime}]"
+  echo "       --acpiwaitcycles   = number of cycles to check for acpi shutdown. [Default: ${dflt_acpiwaitcycles}]"
+  echo "       --acpiwaitpoweroff = if after acpiwaitcycles, the VM still hasn't shutdown, try a forced poweroff, otherwise skip"
+  echo "       --dryrun       = Limited run. Display commands, and do not run them. [Default: off]"
+  echo "       --help         = this help info"
+  echo "       --runbackup    = Actually run. Safety switch. Prevents accidently running backups and pausing VMs"
   echo ""
-  echo "       VMNAME|VMUUID = VM to backup. Can list more then one. If not set, fallback to list."
+  echo "       VMNAME|VMUUID  = VM to backup. Can list more then one. If not set, fallback to list."
   echo ""
   echo "  Note: Options can also be set in ${masterconffile} or ${confdir}/VMNAME.conf"
   echo ""
@@ -312,6 +351,10 @@ loadconfdefaults() {
   value=$(gl_getconfopt "${file}" "backupdir")
   if [[ "${value}" != "" ]]; then glob_backupdir="${value}"; fi
 
+  # look for backupgroup
+  value=$(gl_getconfopt "${file}" "backupgroup")
+  if [[ "${value}" != "" ]]; then glob_backupgroup="${value}"; fi
+
   # look for versions
   value=$(gl_getconfopt "${file}" "versions")
   if [[ "${value}" != "" ]]; then glob_versions="${value}"; fi
@@ -352,6 +395,18 @@ loadconfdefaults() {
   value=$(gl_getconfopt "${file}" "acpi")
   if [[ "${value}" != "" ]]; then glob_acpi="${value}"; fi
 
+  # look for acpiwaittime
+  value=$(gl_getconfopt "${file}" "acpiwaittime")
+  if [[ "${value}" != "" ]]; then glob_acpiwaittime="${value}"; fi
+
+  # look for acpiwaitcycles
+  value=$(gl_getconfopt "${file}" "acpiwaitcycles")
+  if [[ "${value}" != "" ]]; then glob_acpiwaitcycles="${value}"; fi
+
+  # look for acpiwaitpoweroff
+  value=$(gl_getconfopt "${file}" "acpiwaitpoweroff")
+  if [[ "${value}" != "" ]]; then glob_acpiwaitpoweroff="${value}"; fi
+
   # look for nodays
   value=$(gl_getconfopt "${file}" "nodays")
   if [[ "${value}" != "" ]]; then glob_nodays="${value}"; fi
@@ -372,49 +427,54 @@ gl_log "$0 ($version) command line : $0 $*"
 # get any commandline arguments
 while [ "$1" != "" ]; do
   case $1 in
-    --verbose )    set -vx
-                   ;;
-    --list )       shift; list=$1
-                   ;;
-    --dryrun )     cli_dryrun=1
-                   ;;
-    --state )      shift; cli_state=$1
-                   ;;
-    --versions )   shift; cli_versions=$1
-                   ;;
-    --daystokeep ) shift; cli_daystokeep=$1
-                   ;;
-    --exportdir )  shift; cli_exportdir=$1
-                   ;;
-    --backupdir )  shift; cli_backupdir=$1
-                   ;;
-    --type )       shift; cli_backuptype=$1
-                   ;;
-    --syslog )     cli_syslog=1
-                   ;;
-    --noconf )     cli_noconf=1
-                   ;;
-    --runbackup )  cli_runbackup="yes"
-                   ;;
-    --nodays )     cli_nodays=1
-                   ;;
-    --acpi )       cli_acpi=1
-                   ;;
-    --syslogid )   shift; cli_syslogid=$1
-                   ;;
-    --confdir )    shift; cli_confdir=$1
-                   ;;
-    -h | --help )  usage
-                   exit
-                   ;;
-    -* )           echo "Unknown option \"$1\""
-                   echo
-                   usage
-                   exit
-                   ;;
-    * )            vm="${vm} $1"
-                   ;;
-
+    --verbose )     set -vx
+                    ;;
+    --list )        shift; list=$1
+                    ;;
+    --dryrun )      cli_dryrun=1
+                    ;;
+    --state )       shift; cli_state=$1
+                    ;;
+    --versions )    shift; cli_versions=$1
+                    ;;
+    --daystokeep )  shift; cli_daystokeep=$1
+                    ;;
+    --exportdir )   shift; cli_exportdir=$1
+                    ;;
+    --backupdir )   shift; cli_backupdir=$1
+                    ;;
+    --type )        shift; cli_backuptype=$1
+                    ;;
+    --syslog )      cli_syslog=1
+                    ;;
+    --noconf )      cli_noconf=1
+                    ;;
+    --runbackup )   cli_runbackup="yes"
+                    ;;
+    --nodays )      cli_nodays=1
+                    ;;
+    --acpi )        cli_acpi=1
+                    ;;
+    --acpiwaittime )shift; cli_acpiwaittime=$1
+                    ;;
+    --acpiwaitcycles )  shift; cli_acpiwaitcycles=$1
+                    ;;
+    --acpiwaitpoweroff ) cli_acpiwaitpoweroff="yes"
+                    ;;
+    --syslogid )    shift; cli_syslogid=$1
+                    ;;
+    --confdir )     shift; cli_confdir=$1
+                    ;;
+    -h | --help )   usage
+                    exit
+                    ;;
+    -* )            echo "Unknown option \"$1\""
+                    echo
+                    usage
+                    exit
+                    ;;
+    * )             vm="${vm} $1"
+                    ;;
   esac
   shift
 done
@@ -450,7 +510,7 @@ fi
 
 # sanity checks
 # make sure the commands we need to run are available
-commlist="vboxmanage df du logger cat gawk grep"
+commlist="vboxmanage df du logger cat gawk grep chmod"
 for comm in ${commlist}; do
   command -v ${comm} >& /dev/null
   status=$?
@@ -493,6 +553,9 @@ if [[ $(gl_isnum "${daystokeep}") != "1" ]]; then
   gl_err "daystokeep must be a number. Exiting."
   exit 1
 fi
+
+# check backupgroup
+backupgroup=$(gl_getvar "string" "${dflt_backupgroup}" 0 "${glob_backupgroup}" 0 "${vm_backupgroup}" 0 "${cli_backupgroup}" 0)
 
 # check backupdir
 backupdir=$(gl_getvar "string" "${dflt_backupdir}" 0 "${glob_backupdir}" 0 "${vm_backupdir}" 0 "${cli_backupdir}" 0)
@@ -662,9 +725,26 @@ for vm in ${vms}; do
       shutcomm="acpipowerbutton"
     fi
 
+
+    # check for acpiwaittime override
+    vm_acpiwaittime=$(gl_getconfopt "${vm_conf_file}" "acpiwaittime")
+    acpiwaittime=$(gl_getvar "number" "${dflt_acpiwaittime}" 0 "${glob_acpiwaittime}" 0 "${vm_acpiwaittime}" 0 "${cli_acpiwaittime}" 0)
+
+    # check for acpiwaitcycles override
+    vm_acpiwaitcycles=$(gl_getconfopt "${vm_conf_file}" "acpiwaitcycles")
+    acpiwaitcycles=$(gl_getvar "number" "${dflt_acpiwaitcycles}" 0 "${glob_acpiwaitcycles}" 0 "${vm_acpiwaitcycles}" 0 "${cli_acpiwaitcycles}" 0)
+
+    # check for acpiwaitpoweroff override
+    vm_acpiwaitpoweroff=$(gl_getconfopt "${vm_conf_file}" "acpiwaitpoweroff")
+    acpiwaitpoweroff=$(gl_getvar "string" "${dflt_acpiwaitpoweroff}" 0 "${glob_acpiwaitpoweroff}" 0 "${vm_acpiwaitpoweroff}" 0 "${cli_acpiwaitpoweroff}" 0)
+
     # check for backup type override
     vm_backuptype=$(gl_getconfopt "${vm_conf_file}" "backuptype")
     backuptype=$(gl_getvar "string" "${dflt_backuptype}" 0 "${glob_backuptype}" 0 "${vm_backuptype}" 0 "${cli_backuptype}" 0)
+
+    # check for backupgroup override
+    vm_backupgroup=$(gl_getconfopt "${vm_conf_file}" "backupgroup")
+    backupgroup=$(gl_getvar "string" "${dflt_backupgroup}" 0 "${glob_backupgroup}" 0 "${vm_backupgroup}" 0 "${cli_backupgroup}" 0)
 
     # check for versions override
     vm_versions=$(gl_getconfopt "${vm_conf_file}" "versions")
@@ -673,6 +753,7 @@ for vm in ${vms}; do
     # check for daystokeep override
     vm_daystokeep=$(gl_getconfopt "${vm_conf_file}" "daystokeep")
     daystokeep=$(gl_getvar "number" "${dflt_daystokeep}" 0 "${glob_daystokeep}" 0 "${vm_daystokeep}" 0 "${cli_daystokeep}" 0)
+
 
     # ignore vms having the backuptag at the end. These are leftovers from previous backups, or are still running
     if [[ "${vmname}" =~ ${backuptag}$ ]]; then
@@ -688,7 +769,7 @@ for vm in ${vms}; do
       timestamp=$(date +${timeformat})
        
       # We have a match.. begin backup
-      gl_log "-- [${vmname}] Start backup [State:${foundstate}] [Days:${days}] [Type:${backuptype}] [Shutdown:${shutcomm}]"
+      gl_log "-- [${vmname}] Start backup [State:${foundstate}] [Days:${days}] [Type:${backuptype}] [Group:${backupgroup}] [Shutdown:${shutcomm}]"
 
       # Delete old TMPLOG, jic
       gl_run /bin/rm -f "${tmplog}"
@@ -697,7 +778,7 @@ for vm in ${vms}; do
       # If the VM is running or paused, save its state. Need this to "resume" it after backing up
       if [[ "${foundstate}" == "running" || "${foundstate}" == "paused" ]]; then
 
-        gl_log "    Begin VM ${shutcomm}"
+        gl_log "-- [${vmname}]    Begin VM ${shutcomm}"
         SECONDS=0
         if [[ "${gl_dryrun}" -eq 1 ]]; then
           echo vboxmanage controlvm "${vmname}" "${shutcomm}"
@@ -717,17 +798,43 @@ for vm in ${vms}; do
 
           ## possible infinite loop here if waitstate never changes
           ## fix this later
-          while [ "${waitstate}" != "poweroff" ]; do
-            gl_log "     Waiting for VM to shutdown"
-            sleep 5
+          cyclenum=0
+          savestatestatus=1
+          while [[ "${waitstate}" != "poweroff" && ${savestatestatus} -ne 0 ]]; do
+            gl_log "-- [${vmname}]     Waiting for VM to shutdown [${cyclenum}/${acpiwaitcycles}]"
+            sleep ${acpiwaittime}
+            cyclenum=$(( cyclenum + 1 ))
+            if [[ ${cyclenum} -eq ${acpiwaitcycles} ]]; then
+              # issue "forced" poweroff if set
+              if [[ "${acpiwaitpoweroff}" != "yes" ]]; then
+                # skip VM
+                gl_log "-- [${vmname}]     ACPI wait cycles exceeded. Skipping VM."
+                savestatestatus=1
+              else
+                # force VM poweroff
+                if [[ "${gl_dryrun}" -eq 1 ]]; then
+                  echo vboxmanage controlvm "${vmname}" "poweroff"
+                  savestatestatus=0
+                else
+                  vboxmanage controlvm "${vmname}" "poweroff" >& "${tmplog}"
+                  savestatestatus=$?
+                  # sleep a bit, giving the VM time to poweroff
+                  sleep ${acpiwaittime}
+                fi
+              fi
+            fi
             waitstate=$(vboxmanage showvminfo "${vmname}" --machinereadable | grep -E "^VMState=" | cut -d'"' -f2)
           done
+        fi
+
+        if [[ "${waitstate}" == "poweroff" ]]; then
+          savestatestatus=0
         fi
 
         duration=$(gl_secstohms $SECONDS)
         # only logoutput if error
         if [[ ${savestatestatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
-        gl_log "    End VM ${shutcomm}. $duration"
+        gl_log "-- [${vmname}]    End VM ${shutcomm}. $duration"
       fi
       
       # If savestate was sucessfull, being the backup
@@ -738,13 +845,13 @@ for vm in ${vms}; do
         # Reasoning: Minimize system downtime. Convert to OVA, if needed, AFTER cloning is completed
 
         backupname="${vmname}-${timestamp}${backuptag}"
-        gl_log "    Begin Clone : [${backupname}]"
+        gl_log "-- [${vmname}]    Begin Clone : [${backupname}]"
 
         freedisk=0
         if [[ -d "${exportdir}"/. ]]; then
           freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
         fi
-        gl_log "     Disk free before clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
+        gl_log "-- [${vmname}]     Disk free before clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
         SECONDS=0
         if [[ "${gl_dryrun}" -eq 1 ]]; then
@@ -764,19 +871,19 @@ for vm in ${vms}; do
         if [[ -d "${exportdir}"/"${backupname}" ]]; then
           exportdirsize=$(du -sk "${exportdir}"/"${backupname}" | awk '{print $1}')
         fi
-        gl_log "      Exportdir size: $(( ${exportdirsize} / 1024 ))MB"
+        gl_log "-- [${vmname}]      Exportdir size: $(( ${exportdirsize} / 1024 ))MB"
 
         freedisk=0
         if [[ -d "${exportdir}"/. ]]; then
           freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
         fi
-        gl_log "     Disk free after clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
+        gl_log "-- [${vmname}]     Disk free after clonevm ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
-        gl_log "    End Clone export. $duration"
+        gl_log "-- [${vmname}]    End Clone export. $duration"
 
         # put vm back into original state, regardless of backupstatus
         if [[ "${foundstate}" == "running" || "${foundstate}" == "paused" ]]; then
-          gl_log "    Begin VM restore state"
+          gl_log "-- [${vmname}]    Begin VM restore state"
           SECONDS=0
           if [[ "${gl_dryrun}" -eq 1 ]]; then
             echo vboxmanage startvm "${vmname}" --type headless
@@ -801,7 +908,7 @@ for vm in ${vms}; do
             if [[ ${pausestatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
           fi
           duration=$(gl_secstohms $SECONDS)
-          gl_log "    End VM restore state. $duration"
+          gl_log "-- [${vmname}]    End VM restore state. $duration"
         fi
              
         # if clone was sucessful and we have to export to OVA
@@ -810,7 +917,7 @@ for vm in ${vms}; do
           # We can only create an export from a "registered" vm.
           # register this "clone", then create an OVA eport from it.
 
-          gl_log "    Begin VM register for OVA export : [${backupname}] [${foundstate}]"
+          gl_log "-- [${vmname}]    Begin VM register for OVA export : [${backupname}] [${foundstate}]"
           SECONDS=0
           if [[ "${gl_dryrun}" -eq 1 ]]; then
             echo vboxmanage registervm "${exportdir}/${backupname}/${backupname}.vbox"
@@ -822,16 +929,16 @@ for vm in ${vms}; do
           duration=$(gl_secstohms $SECONDS)
           # only log output if error
           if [[ ${registerstatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
-          gl_log "    End VM register for OVA export. $duration"
+          gl_log "-- [${vmname}]    End VM register for OVA export. $duration"
             
           ovaname="${vmname}-${timestamp}.ova"
-          gl_log "    Begin OVA export: [${ovaname}]"
+          gl_log "-- [${vmname}]    Begin OVA export: [${ovaname}]"
 
           freedisk=0
           if [[ -d "${exportdir}"/. ]]; then
             freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
           fi
-          gl_log "     Disk free before OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
+          gl_log "-- [${vmname}]     Disk free before OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
           SECONDS=0
           if [[ "${gl_dryrun}" -eq 1 ]]; then
@@ -849,17 +956,17 @@ for vm in ${vms}; do
           if [[ -f "${exportdir}"/"${ovaname}" ]]; then
             exportovasize=$(du -sk "${exportdir}"/"${ovaname}" | awk '{print $1}')
           fi
-          gl_log "      OVA size: $(( ${exportovasize} / 1024 ))MB"
+          gl_log "-- [${vmname}]      OVA size: $(( ${exportovasize} / 1024 ))MB"
 
           freedisk=0
           if [[ -d "${exportdir}"/. ]]; then
             freedisk=$(df -k "${exportdir}"/. | grep /dev | awk '{print $4}')
           fi
-          gl_log "     Disk free after OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
+          gl_log "-- [${vmname}]     Disk free after OVA export ${exportdir} : $(( ${freedisk} / 1024 ))MB"
 
-          gl_log "    End OVA export. $duration"
+          gl_log "-- [${vmname}]    End OVA export. $duration"
 
-          gl_log "    Begin VM unregister from OVA export : [${backupname}] [${foundstate}]"
+          gl_log "-- [${vmname}]    Begin VM unregister from OVA export : [${backupname}] [${foundstate}]"
           SECONDS=0
           if [[ "${gl_dryrun}" -eq 1 ]]; then
             echo vboxmanage unregistervm "${backupname}"
@@ -871,7 +978,7 @@ for vm in ${vms}; do
           duration=$(gl_secstohms $SECONDS)
           # only log output if error
           if [[ ${registerstatus} -ne 0 ]]; then gl_logfile "${tmplog}" ; fi
-          gl_log "    End VM unregister from OVA export. $duration"
+          gl_log "-- [${vmname}]    End VM unregister from OVA export. $duration"
         fi
 
         if [[ ${backupstatus} -eq 0  ]]; then
@@ -882,18 +989,18 @@ for vm in ${vms}; do
           if [[ ${daystokeep} -eq 0  ]]; then       
             # daystokeep not set, use standard versioning numbering ala syslog
             # yes.. double up on the vmname. this puts all the backups for the same vm in the same folder
-            backupfolder=${backupdir}/${vmname}/${vmname}
+            backupfolder=${backupdir}/${backupgroup}/${vmname}/${vmname}
           
             # remove oldest verison, and cycle rest
             for ((i=${versions}; i>=0; i--)); do
               if [[ ${i} -eq ${versions} ]]; then
                 if [[ -d "${backupfolder}.${i}" ]]; then
-                  gl_log "    Removing folder (version wrap) ${backupfolder}.${i}."
+                  gl_log "-- [${vmname}]    Removing folder (version wrap) ${backupfolder}.${i}."
                   gl_run /bin/rm -rf "${backupfolder}.${i}"
                 fi
               elif [[ ${i} -eq 0 && ${versions} -gt 0 ]]; then
                 if [[ -d "${backupfolder}" ]]; then
-                  gl_run mv "${backupfolder}" "${backupfolder}.1"
+                  gl_run mv "${mvbackupfolder}" "${backupfolder}.1"
                 fi
               else
                 j=$(( i + 1 ))
@@ -904,20 +1011,20 @@ for vm in ${vms}; do
             done
           else
             # remove backups older than daystokeep
-            if [[ -d "${backupdir}/${vmname}" ]]; then
+            if [[ -d "${backupdir}/${backupgroup}/${vmname}" ]]; then
               # get list of folders to delete
-              deldirs=$(find "${backupdir}/${vmname}" -type d -mtime +${daystokeep})
+              deldirs=$(find "${backupdir}/${backupgroup}/${vmname}" -type d -mtime +${daystokeep})
               for deldir in ${deldirs}; do
-                gl_log "    Removing folder (+${daystokeep} days old) ${deldir}"
+                gl_log "-- [${vmname}]    Removing folder (+${daystokeep} days old) ${deldir}"
                 gl_run /bin/rm -rf "${deldir}"
               done
             fi
-            backupfolder=${backupdir}/${vmname}/${vmname}.${timestamp}
+            backupfolder=${backupdir}/${backupgroup}/${vmname}/${vmname}.${timestamp}
           fi
 
 
           # move export file to backup folder
-          gl_log "    Begin VM move from export to backup : [${vmname}]"
+          gl_log "-- [${vmname}]    Begin VM move from export to backup : [${vmname}]"
           # Make latest backup folder
           gl_run mkdir -p "${backupfolder}"
 
@@ -925,7 +1032,7 @@ for vm in ${vms}; do
           if [[ -d "${backupfolder}"/. ]]; then
             freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
           fi
-          gl_log "     Disk free before move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
+          gl_log "-- [${vmname}]     Disk free before move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
 
           SECONDS=0
           if [[ "${type}" == "clone" ]]; then
@@ -937,30 +1044,33 @@ for vm in ${vms}; do
             # remove clone as no longer needed
             gl_run /bin/rm -rf "${exportdir}/${backupname}"
           fi
+          # chmod files in backupfolder as "umask" way above does not work??
+          gl_run chmod u+rw,g+r "${backupfolder}"/*
+          
           duration=$(gl_secstohms $SECONDS)
 
           backupfoldersize=0
           if [[ -d "${backupfolder}"/. ]]; then
             backupfoldersize=$(du -sk "${backupfolder}"/. | awk '{print $1}')
           fi
-          gl_log "      Backup folder size: $(( ${backupfoldersize} / 1024 ))MB"
+          gl_log "-- [${vmname}]      Backup folder size: $(( ${backupfoldersize} / 1024 ))MB"
 
           freedisk=0
           if [[ -d "${backupfolder}"/. ]]; then
             freedisk=$(df -k "${backupfolder}"/. | grep /dev | awk '{print $4}')
           fi
-          gl_log "     Disk free after move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
+          gl_log "-- [${vmname}]     Disk free after move to backup ${backupfolder} : $(( ${freedisk} / 1024 ))MB"
 
-          gl_log "    End VM move.  $duration"
+          gl_log "-- [${vmname}]    End VM move.  $duration"
 
         else
-          gl_log "  Backup failed for ${backupname}. Check log."
+          gl_log "-- [${vmname}]  Backup failed for ${backupname}. Check log."
           # remove possible failed clone remnants..
           gl_run /bin/rm -rf "${exportdir}/${backupname}"
         fi
             
       else
-        gl_log "  Savestate failed. Cannot backup [${vmname}]. See log."
+        gl_log "-- [${vmname}]  Savestate failed. Cannot backup [${vmname}]. See log."
       fi
 
       gl_run /bin/rm -f "${tmplog}"
